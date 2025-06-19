@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'Aplicacion',  # Asegúrate de que tu app se llama "Aplicacion"
 ]
 
 MIDDLEWARE = [
@@ -54,13 +55,14 @@ ROOT_URLCONF = 'InventaOne.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                
             ],
         },
     },
@@ -104,7 +106,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Santiago'
+
 
 USE_I18N = True
 
@@ -120,3 +123,16 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+AUTH_USER_MODEL = 'Aplicacion.Usuario'  # si tu modelo Usuario está en la app "Aplicacion"
+
+# Redirecciones post login/logout
+LOGIN_REDIRECT_URL = '/dashboard/'  #Esto es necesario para que, tras el login, Django redirija a /dashboard/.
+LOGOUT_REDIRECT_URL = '/login/'
+LOGIN_URL = '/login/'
+
+AUTHENTICATION_BACKENDS = [
+    'Aplicacion.backends.EmailBackend',  # Ajusta el path según tu estructura
+    'django.contrib.auth.backends.ModelBackend',
+]

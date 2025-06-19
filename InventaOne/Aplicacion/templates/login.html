@@ -1,0 +1,26 @@
+{% extends 'base.html'%}
+ 
+{% block principal %}  
+
+ <div class="login-card">
+    <div class="logo">
+      Inventa<span>One</span>
+    </div>
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-4">
+        <label for="email" class="form-label">Correo Electrónico</label>
+        <input type="email" name="username" class="form-control" id="email" placeholder="usuario@ejemplo.com" required />
+      </div>
+      <div class="mb-2">
+        <label for="password" class="form-label">Contraseña</label>
+        <input type="password" name="password" class="form-control" id="password" placeholder="••••••••" required />
+      </div>
+      <!-- <a href="#" class="forgot-link">¿Olvidaste tu contraseña?</a> -->
+      <div class="d-grid mt-3">
+        <button type="submit" class="btn btn-login">Entrar</button>
+      </div>
+    </form>
+  </div>
+
+  {% endblock principal %}

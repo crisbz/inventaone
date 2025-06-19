@@ -1,0 +1,63 @@
+{% extends "home.html" %}
+{% block page_content %} 
+      <!-- Contenido Principal -->
+  <div class="container-fluid mt-4">
+            <!-- Agregamos un contenedor para el ícono y el título juntos -->
+  <div class="d-flex align-items-center mb-4">
+    <!-- Botón con tres puntos tipo dropdown -->
+    <div class="dropdown me-2">
+      <button class="btn btn-link text-dark" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fas fa-cog"></i>
+      </button>
+      <ul class="dropdown-menu">
+        <li>
+          <a class="dropdown-item" href="#">
+            <i class="fas fa-plus me-2"></i>Agregar productos
+          </a>
+        </li>
+      </ul>
+    </div>
+          <h1 class="h3 mb-0 text-gray-800">Lista de Productos</h1>
+  </div>
+          <div class="card shadow mb-4">
+            <div class="card-body">
+              <div class="table-responsive">
+                <table id="tabla" class="table table-bordered" width="100%">
+                  <thead class="thead-dark">
+                    <tr>
+                      <th>ID</th>
+                      <th>Nombre</th>
+                      <th>Precio</th>
+                      <th>Stock</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>1</td>
+                      <td>Laptop HP</td>
+                      <td>$850.00</td>
+                      <td>12</td>
+                      <td>
+                        <button class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>2</td>
+                      <td>Mouse Logitech</td>
+                      <td>$25.00</td>
+                      <td>150</td>
+                      <td>
+                        <button class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+    
+
+
+{% endblock page_content %}

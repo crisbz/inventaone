@@ -1,0 +1,75 @@
+{% extends "home.html" %}
+
+{% block page_content %} 
+<div class="container-fluid mt-4">
+  <!-- Título y menú -->
+  <div class="d-flex align-items-center mb-4">
+    <div class="dropdown me-2">
+      <button class="btn btn-link text-dark" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fas fa-cog"></i>
+      </button>
+      <ul class="dropdown-menu">
+        <li>
+          <!-- Botón para abrir modal -->
+          <button class="btn btn-primary" onclick="abrir_modal(this)" data-url="{% url 'Aplicacion:create_user' %}">
+            <i class="fa fa-user-plus"></i> Agregar Usuario
+          </button>
+          <a class="dropdown-item" href="{% url 'Aplicacion:create_user' %}">
+            <i class="fas fa-plus me-2"></i>Agregar usuarios
+          </a>
+        </li>
+      </ul>
+    </div>
+    <h1 class="h3 mb-0 text-gray-800">Lista de Usuarios</h1>
+  </div>
+
+  <!-- Tabla de usuarios -->
+  <div class="card shadow mb-4">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table id="tabla" class="table table-bordered" width="100%">
+          <thead class="thead-dark">
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Correo</th>
+              <th>Rol</th>
+              <th>Telefono</th>
+              <th>Estado</th>
+              <th>Último acceso</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in obj %}
+              {% if item.id_usuario != request.user.id_usuario %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.nombre }} {{ item.apellido_paterno }}</td>
+                <td>{{ item.email }}</td>
+                <td>{{ item.rol }}</td>
+                <td>{{ item.telefono }}</td>
+                <td>
+                  <button 
+                    class="btn btn-warning btn-sm"
+                    onclick="showConfirmModal({{ item.id_usuario }}, {{ item.is_active|yesno:'true,false' }})"
+                  >
+                    {% if item.is_active %}Desactivar{% else %}Activar{% endif %}
+                  </button>
+                </td>
+                <td>{{ item.last_login }}</td>
+                <td>
+                  <button class="btn btn-sm btn-primary">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                </td>
+              </tr>
+              {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock page_content %}

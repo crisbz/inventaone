@@ -1,0 +1,212 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Inventario - Productos</title>
+
+  <!-- Bootstrap 5 y estilos -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,700" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/gh/StartBootstrap/startbootstrap-sb-admin-2/css/sb-admin-2.min.css" rel="stylesheet" />
+  <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+  <link href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css" rel="stylesheet" />
+
+      <!-- Aquí importamos el archivo CSS estático -->
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+</head>
+{% block home %}
+
+{% endblock home %}
+ <!-- Contenedor para el modal (vacío al inicio) -->
+  <div id="popup" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
+  
+  <!-- Scripts -->
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+  <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+  <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/StartBootstrap/startbootstrap-sb-admin-2/js/sb-admin-2.min.js"></script>
+
+  <script>
+    $(function () {
+      // Inicializar DataTable
+      $('#tabla').DataTable({
+        responsive: true,
+        language: { url: "https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json" },
+      });
+
+      // Toggle sidebar y overlay al hacer click en hamburguesa
+      $('#sidebarToggleTop').on('click', function (e) {
+        e.preventDefault();
+        $('#sidebarWrapper').toggleClass('active');
+        $('#sidebarOverlay').toggleClass('show');
+      });
+
+      // Cerrar sidebar al hacer click en overlay
+      $('#sidebarOverlay').on('click', function () {
+        $('#sidebarWrapper').removeClass('active');
+        $('#sidebarOverlay').removeClass('show');
+      });
+
+      // Cerrar sidebar si se hace click en un enlace no submenú y pantalla pequeña
+      $('#sidebarWrapper').on('click', 'a.nav-link', function () {
+        const isSubmenuToggle = $(this).attr('data-bs-toggle') === 'collapse';
+        if (!isSubmenuToggle && window.innerWidth < 768) {
+          $('#sidebarWrapper').removeClass('active');
+          $('#sidebarOverlay').removeClass('show');
+        }
+      });
+
+      // Opcional: cerrar sidebar automáticamente si se redimensiona a escritorio
+      $(window).on("resize", function () {
+        if (window.innerWidth >= 768) {
+          $('#sidebarWrapper').removeClass('active');
+          $('#sidebarOverlay').removeClass('show');
+        }
+      });
+    });
+// Función para abrir el modal
+    function abrir_modal(btn) {
+      const url = $(btn).data("url");
+      $.ajax({
+        url: url,
+        type: 'get',
+        dataType: 'json',
+        success: function(data) {
+          $("#popup").html(data.html_form);
+          $("#popup").modal("show");
+        }
+      });
+    }
+// Función para cerrar el modal
+    function cerrar_modal() {
+      $("#popup").modal("hide");
+    }
+
+    // Captura el submit del formulario dentro del modal
+    $(document).on('submit', '#frm', function(e) {
+      e.preventDefault();
+      const frm = $(this);
+      $.ajax({
+        type: frm.attr('method'),
+        url: frm.attr('action') || window.location.href,
+        data: frm.serialize(),
+        dataType: 'json',
+        success: function(data) {
+          if (data.success) {
+            location.reload();
+          } else {
+            $("#popup").html(data.html_form);
+          }
+        },
+        error: function(xhr, status, error) {
+          alert("Error: " + error);     // Muestras el error en el modal
+        }
+      });
+      return false;
+    });
+
+  // Función para eliminar un usuario
+// Función para eliminar un usuario
+  let selectedUserId = null;
+  let isActive = null;
+
+  function showConfirmModal(userId, currentStatus) {
+    selectedUserId = userId;
+    isActive = currentStatus;
+
+    const message = currentStatus 
+      ? "¿Estás seguro de que deseas desactivar este usuario?"
+      : "¿Estás seguro de que deseas activar este usuario?";
+
+    document.getElementById("confirmModalBody").innerText = message;
+    const modal = new bootstrap.Modal(document.getElementById("confirmModal"));
+    modal.show();
+  }
+
+  document.getElementById("confirmActionBtn").addEventListener("click", function () {
+    if (selectedUserId !== null) {
+      toggleUsuarioActivo(selectedUserId);
+    }
+    bootstrap.Modal.getInstance(document.getElementById("confirmModal")).hide();
+  });
+
+  function toggleUsuarioActivo(userId) {
+    fetch(`/usuarios/toggle/${userId}/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken'),
+        'Content-Type': 'application/json'
+      },
+      credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        location.reload();  // recarga para reflejar el cambio
+      } else {
+        showErrorModal(data.error || "Ocurrió un error.");
+      }
+    })
+    .catch(error => {
+      showErrorModal("Error de red o del servidor.");
+    });
+  }
+
+  function showErrorModal(message) {
+    document.querySelector('#errorModal .modal-body').innerText = message;
+    const modal = new bootstrap.Modal(document.getElementById("errorModal"));
+    modal.show();
+  }
+
+  function getCookie(name) {
+    const cookieValue = document.cookie.split('; ').find(row => row.startsWith(name + '='));
+    return cookieValue ? decodeURIComponent(cookieValue.split('=')[1]) : null;
+  }
+// Función para obtener el CSRF token
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+function mostrarMensajeError(mensaje) {
+  $('#errorModal .modal-body').text(mensaje);
+  var modal = new bootstrap.Modal(document.getElementById('errorModal'));
+  modal.show();
+}
+
+
+function mostrarMensajeError(mensaje) {
+  $('#errorModal .modal-body').text(mensaje);
+  var modal = new bootstrap.Modal(document.getElementById('errorModal'));
+  modal.show();
+}
+
+  </script>
+
+
+
+
+
+</body>
+</html>
+
+
+

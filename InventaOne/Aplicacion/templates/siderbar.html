@@ -1,0 +1,98 @@
+<body id="page-top">
+  <div id="wrapper">
+    <div class="overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar -->
+    <div id="sidebarWrapper" class="custom-sidebar sidebar bg-gradient-primary sidebar-dark">
+      <ul class="navbar-nav accordion" id="accordionSidebar">
+
+        <!-- Marca / Logo -->
+        <a class="sidebar-brand d-flex align-items-center justify-content-center" href="#">
+          <div class="sidebar-brand-icon rotate-n-15"><i class="fas fa-boxes"></i></div>
+          <div class="sidebar-brand-text mx-3">Inventario</div>
+        </a>
+        <hr class="sidebar-divider" />
+
+        <!-- Opción normal -->
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'Aplicacion:productos' %}">
+            <i class="fas fa-box"></i> <span>Productos</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">
+            <i class="fas fa-truck"></i> <span>Proveedores</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">
+            <i class="fas fa-cash-register"></i> <span>Ventas</span>
+          </a>
+        </li>
+
+        <!-- Submenú Clientes -->
+        <li class="nav-item">
+          <a href="#submenuClientes"
+             class="nav-link collapsed d-flex justify-content-between align-items-center"
+             data-bs-toggle="collapse"
+             aria-expanded="false"
+             aria-controls="submenuClientes">
+            <span class="d-flex align-items-center">
+              <i class="fas fa-users me-2"></i> Clientes
+            </span>
+            <i class="fas fa-angle-down submenu-arrow"></i>
+          </a>
+          <ul id="submenuClientes"
+              class="collapse sidebar-submenu nav flex-column"
+              data-bs-parent="#accordionSidebar">
+            <li class="nav-item">
+              <a href="#" class="nav-link d-flex align-items-center">
+                <i class="fas fa-user-plus me-2"></i><span>Agregar Clientes</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="#" class="nav-link d-flex align-items-center">
+                <i class="fas fa-th me-2"></i><span>Listado de clientes</span>
+              </a>
+            </li>
+          </ul>
+        </li>
+
+        <!-- Submenú Reportes -->
+        <li class="nav-item">
+          <a href="#submenuReportes"
+             class="nav-link collapsed d-flex justify-content-between align-items-center"
+             data-bs-toggle="collapse"
+             aria-expanded="false"
+             aria-controls="submenuReportes">
+            <span class="d-flex align-items-center">
+              <i class="fas fa-chart-line me-2"></i> Reportes
+            </span>
+            <i class="fas fa-angle-down submenu-arrow"></i>
+          </a>
+          <ul id="submenuReportes"
+              class="collapse sidebar-submenu nav flex-column"
+              data-bs-parent="#accordionSidebar">
+            <li class="nav-item">
+              <a href="#" class="nav-link d-flex align-items-center">
+                <i class="fas fa-file-alt me-2"></i><span>Reporte de Ventas</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="#" class="nav-link d-flex align-items-center">
+                <i class="fas fa-boxes me-2"></i><span>Inventario</span>
+              </a>
+            </li>
+          </ul>
+        </li>
+
+        <!-- Otra opción normal -->
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'Aplicacion:usuarios' %}">
+            <i class="fas fa-users"></i> <span>Usuarios</span>
+          </a>
+        </li>
+
+        <hr class="sidebar-divider d-none d-md-block" />
+      </ul>
+    </div>
