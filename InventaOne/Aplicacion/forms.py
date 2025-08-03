@@ -1,7 +1,8 @@
 # filepath: d:\django\inventaone\InventaOne\Aplicacion\forms.py
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import Usuario
+from Aplicacion.models import *
+#from .models import Usuario , Categoria
 from django.utils.crypto import get_random_string
 
 class UsuarioCreationForm(UserCreationForm):
@@ -60,3 +61,116 @@ class UsuarioForm(forms.ModelForm):
             'apellido_paterno': forms.TextInput(attrs={'class': 'form-control'}),
             'apellido_materno': forms.TextInput(attrs={'class': 'form-control'}),
         }
+        
+class CategoriaForm(forms.ModelForm):
+    class Meta:
+        model = Categoria
+        fields = ['nombre'] 
+        
+    
+
+        
+class SubCategoriaForm(forms.ModelForm):
+    id_categoria = forms.ModelChoiceField(
+        queryset=Categoria.objects.filter(estado=True)
+        .order_by('nombre')
+    )
+    class Meta:
+        model= Subcategoria
+        fields = ['id_categoria','nombre']
+        labels = {'descripcion':"Sub Categoría",
+               "estado":"Estado"}
+        widget={'nombre': forms.TextInput}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args,**kwargs)
+        for field in iter(self.fields):
+            self.fields[field].widget.attrs.update({
+                'class':'form-control'
+            })
+        self.fields['id_categoria'].empty_label =  "Seleccione Categoría"
+        
+
+
+class MarcaForm(forms.ModelForm):
+    class Meta:
+        model = Marca
+        fields = ['nombre']
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in iter(self.fields):
+            self.fields[field].widget.attrs.update({
+                'class': 'form-control'
+            })
+            
+            
+
+class UnidadMedidaForm(forms.ModelForm):
+    class Meta:
+        model =  UnidadMedida
+        fields = ['nombre']
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in iter(self.fields):
+            self.fields[field].widget.attrs.update({
+                'class': 'form-control'
+            })
+            
+
+class ProveedorForm(forms.ModelForm):
+    class Meta:
+        model = Proveedor
+        fields = [
+            'nombre',
+            'apellido_paterno',
+            'rut',
+            'correo',
+            'contacto',
+            'telefono',
+        ]
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'apellido_paterno': forms.TextInput(attrs={'class': 'form-control'}),
+            'rut': forms.TextInput(attrs={'class': 'form-control'}),
+            'correo': forms.EmailInput(attrs={'class': 'form-control'}),
+            'contacto': forms.TextInput(attrs={'class': 'form-control'}),
+            'direccion': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields:
+            self.fields[field].widget.attrs.update({'class': 'form-control'})
+            
+            
+class ClienteForm(forms.ModelForm):
+    class Meta:
+        model = Cliente
+        fields = [
+            'nombre',
+            'apellido_paterno',
+            'rut',
+            'correo',
+            'direccion',
+            'telefono',
+        ]
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'apellido_paterno': forms.TextInput(attrs={'class': 'form-control'}),
+            'rut': forms.TextInput(attrs={'class': 'form-control'}),
+            'correo': forms.EmailInput(attrs={'class': 'form-control'}),
+            'direccion': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields:
+            self.fields[field].widget.attrs.update({'class': 'form-control'})

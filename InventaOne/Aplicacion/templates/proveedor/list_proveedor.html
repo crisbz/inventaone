@@ -1,0 +1,84 @@
+{% extends "home.html" %}
+
+{% block page_content %} 
+<div class="container-fluid mt-4">
+  <!-- Título y menú -->
+  <div class="d-flex align-items-center mb-4">
+    <div class="dropdown me-2">
+      <button class="btn btn-link text-dark" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fas fa-cog"></i>
+      </button>
+      <ul class="dropdown-menu">
+        <li>
+          <!-- Botón para abrir modal -->
+          <button class="btn btn-primary" onclick="abrir_modal(this)" data-url="{% url 'Aplicacion:create_proveedor' %}">
+            <i class="fa fa-user-plus"></i> Agregar proveedor
+          </button>
+        </li>
+      </ul>
+    </div>
+    <h1 class="h3 mb-0 text-gray-800">Listado de proveedores</h1>
+  </div>
+
+  <!-- Tabla de usuarios -->
+  <div class="card shadow mb-4">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table id="tabla" class="table table-bordered" width="100%">
+          <thead class="thead-dark">
+            <tr>
+              <th>N°</th>
+              <th>Nombre</th>
+              <th>Rut</th>
+              <th>Correo</th>
+              <th>Teléfono</th>
+              <th>Direccion</th>
+              <th>F. creado</th>
+              <th>F. modificacion</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in obj %}
+             
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.nombre }} {{item.apellido_paterno}}</td>
+                <td>{{ item.rut}}</td> 
+                <td>{{ item.correo}}</td>
+                <td>{{ item.telefono}}</td>
+                <td>{{ item.contacto}}</td>              
+                <td>{{ item.fc }}</td>
+                <td>{{ item.fm }}</td>
+                <td>
+                  <button 
+  class="btn btn-warning btn-sm"
+  onclick="showConfirmModalEstado('Proveedor', {{ item.id_proveedor }}, {{ item.estado|yesno:'true,false' }}, '{{ item.nombre }} {{ item.apellido_paterno }}',{{ forloop.counter }})"
+>
+  {% if item.estado %}Desactivar{% else %}Activar{% endif %}
+</button>
+                </td>
+                <td>
+                  <button 
+  class="btn btn-sm btn-primary"
+  onclick="abrir_modal(this)" 
+  data-url="{% url 'Aplicacion:edit_proveedor' item.id_proveedor %}">
+  <i class="fas fa-edit"></i>
+</button>
+<button 
+  class="btn btn-sm btn-danger"
+  onclick="showConfirmDeleteModal('Proveedor', {{ item.id_proveedor }}, '{{ item.nombre }}',{{ forloop.counter }})">
+  <i class="fas fa-trash"></i>
+</button>
+                </td>
+              </tr>
+
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock page_content %}

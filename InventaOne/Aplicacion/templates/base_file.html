@@ -1,4 +1,3 @@
-
 {% load static %}
 <!DOCTYPE html>
 <html lang="es">
@@ -132,8 +131,16 @@
   }
 
   document.getElementById("confirmActionBtn").addEventListener("click", function () {
-    if (selectedUserId !== null) {
+    // Si es acción de usuario
+    if (typeof selectedUserId !== "undefined" && selectedUserId !== null) {
       toggleUsuarioActivo(selectedUserId);
+      selectedUserId = null; // Limpia para el siguiente uso
+    }
+    // Si es acción genérica
+    else if (selectedModel && selectedObjId !== null) {
+      confirmToggleEstado();
+      selectedModel = null;
+      selectedObjId = null;
     }
     bootstrap.Modal.getInstance(document.getElementById("confirmModal")).hide();
   });
@@ -192,13 +199,107 @@ function mostrarMensajeError(mensaje) {
   modal.show();
 }
 
+// --- Activar/desactivar genérico para cualquier modelo con campo 'estado' ---
+let selectedModel = null;
+let selectedObjId = null;
+let selectedObjEstado = null;
+let selectedObjName = null;
+let selectedRowNumber = null;  // <-- agrego variable para fila
 
-function mostrarMensajeError(mensaje) {
-  $('#errorModal .modal-body').text(mensaje);
-  var modal = new bootstrap.Modal(document.getElementById('errorModal'));
+function showConfirmModalEstado(modelo, objId, currentStatus, objName, rowNumber) {
+  selectedModel = modelo;
+  selectedObjId = objId;
+  selectedObjEstado = currentStatus;
+  selectedObjName = objName;
+  selectedRowNumber = rowNumber;  // asigno fila
+
+  const message = currentStatus
+    ? `¿Estás seguro de que deseas desactivar este registro N°${rowNumber} de nombre ${objName} ?`
+    : `¿Estás seguro de que deseas activar este registro N°${rowNumber} de nombre ${objName} ?`
+
+  document.getElementById("confirmModalBody").innerText = message;
+  const modal = new bootstrap.Modal(document.getElementById("confirmModal"));
   modal.show();
 }
 
+
+function confirmToggleEstado() {
+  if (selectedModel && selectedObjId !== null) {
+    fetch(`/toggle/${selectedModel}/${selectedObjId}/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken'),
+        'Content-Type': 'application/json'
+      },
+      credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        location.reload();
+      } else {
+        showErrorModal(data.error || "Ocurrió un error.");
+      }
+    })
+    .catch(error => {
+      showErrorModal("Error de red o del servidor.");
+    });
+  }
+}
+
+// Asocia el botón "Aceptar" del modal a la función confirmToggleEstado
+document.getElementById("confirmActionBtn").addEventListener("click", function () {
+  confirmToggleEstado();
+  bootstrap.Modal.getInstance(document.getElementById("confirmModal")).hide();
+});
+
+// --- Eliminar genérico para cualquier modelo ---
+let deleteModel = null;
+let deleteObjId = null;
+let deleteObjName = null;
+let deleteRowNumber = null;
+
+function showConfirmDeleteModal(modelo, objId, objName, rowNumber) {
+  deleteModel = modelo;
+  deleteObjId = objId;
+  deleteObjName = objName;
+  deleteRowNumber  = rowNumber;
+
+  const message = `¿Estás seguro de que deseas eliminar  N°${rowNumber}  "${objName}"?`;
+  document.getElementById("confirmModalBody").innerText = message;
+  const modal = new bootstrap.Modal(document.getElementById("confirmModal"));
+  modal.show();
+}
+
+function confirmDelete() {
+  if (deleteModel && deleteObjId !== null) {
+    fetch(`/${deleteModel}/delete/${deleteObjId}/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken'),
+        'Content-Type': 'application/json'
+      },
+      credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        location.reload();
+      } else {
+        showErrorModal(data.error || "Ocurrió un error al eliminar.");
+      }
+    })
+    .catch(error => {
+      showErrorModal("Error de red o del servidor.");
+    });
+  }
+}
+
+// Asocia el botón "Aceptar" del modal a la función confirmDelete
+document.getElementById("confirmActionBtn").addEventListener("click", function () {
+  confirmDelete();
+  bootstrap.Modal.getInstance(document.getElementById("confirmModal")).hide();
+});
   </script>
 
 

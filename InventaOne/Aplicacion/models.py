@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.management.base import CommandError
+from django.conf import settings
+from django.utils import timezone
 # Create your models here.
 
 
@@ -38,22 +40,32 @@ class Usuario(AbstractUser):
 
 class ClaseModelo(models.Model):
     estado = models.BooleanField(default=True)
-    fc = models.DateTimeField(auto_now_add=True)
-    fm = models.DateTimeField(auto_now=True)
-    uc = models.ForeignKey(Usuario, on_delete=models.CASCADE)
-    um = models.IntegerField(blank=True,null=True)
+    fc = models.DateTimeField(auto_now_add=True)  # Fecha de creación automática  default=timezone.now
+    fm = models.DateTimeField(auto_now=True)      # Fecha de modificación automática  default=timezone.now
+    uc = models.ForeignKey(Usuario, null=True, blank=True, on_delete=models.CASCADE)  
+    um = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='modificados_%(class)s'
+    )
 
     class Meta:
-        abstract=True
+        abstract = True
 
-class Categoria(models.Model):
+class Categoria(ClaseModelo):
     id_categoria = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=100, null=True, blank=True)
+    
+    
+    def __str__(self):
+        return self.nombre or f"Categoría {self.id_categoria}"
 
     class Meta:
         db_table = 'Categoria'
-
-class Subcategoria(models.Model):
+  
+class Subcategoria(ClaseModelo):
     id_subcategoria = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=100, null=True, blank=True)
     id_categoria = models.ForeignKey('Categoria', on_delete=models.CASCADE, null=True, blank=True)
@@ -61,21 +73,21 @@ class Subcategoria(models.Model):
     class Meta:
         db_table = 'Subcategoria'
 
-class Marca(models.Model):
+class Marca(ClaseModelo):
     id_marca = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=100, null=True, blank=True)
 
     class Meta:
         db_table = 'Marca'
 
-class UnidadMedida(models.Model):
+class UnidadMedida(ClaseModelo):
     id_unidad = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=50, null=True, blank=True)
-
+    
     class Meta:
         db_table = 'UnidadMedida'
 
-class Proveedor(models.Model):
+class Proveedor(ClaseModelo):
     id_proveedor = models.AutoField(primary_key=True)
     rut = models.CharField(max_length=20, unique=True, null=True, blank=True)
     nombre = models.CharField(max_length=100, null=True, blank=True)
@@ -88,8 +100,7 @@ class Proveedor(models.Model):
     class Meta:
         db_table = 'Proveedor'
 
-
-class Cliente(models.Model):
+class Cliente(ClaseModelo):
     id_cliente = models.AutoField(primary_key=True)
     rut = models.CharField(max_length=20, unique=True, null=True, blank=True)
     nombre = models.CharField(max_length=100, null=True, blank=True)
@@ -102,7 +113,7 @@ class Cliente(models.Model):
     class Meta:
         db_table = 'Cliente'
 
-class Pedido(models.Model):
+class Pedido(ClaseModelo):
     id_pedido = models.AutoField(primary_key=True)
     fecha = models.DateField(null=True, blank=True)
     estado = models.CharField(max_length=50, null=True, blank=True)
@@ -111,7 +122,7 @@ class Pedido(models.Model):
     class Meta:
         db_table = 'Pedido'
 
-class DetallePedido(models.Model):
+class DetallePedido(ClaseModelo):
     id_detalle = models.AutoField(primary_key=True)
     id_pedido = models.ForeignKey('Pedido', on_delete=models.CASCADE, null=True, blank=True)
     id_producto = models.ForeignKey('Producto', on_delete=models.CASCADE, null=True, blank=True)
@@ -121,7 +132,7 @@ class DetallePedido(models.Model):
     class Meta:
         db_table = 'DetallePedido'
 
-class Compra(models.Model):
+class Compra(ClaseModelo):
     id_compra = models.AutoField(primary_key=True)
     fecha = models.DateField(null=True, blank=True)
     id_proveedor = models.ForeignKey('Proveedor', on_delete=models.CASCADE, null=True, blank=True)
@@ -129,7 +140,7 @@ class Compra(models.Model):
     class Meta:
         db_table = 'Compra'
 
-class DetalleCompra(models.Model):
+class DetalleCompra(ClaseModelo):
     id_detalle = models.AutoField(primary_key=True)
     id_compra = models.ForeignKey('Compra', on_delete=models.CASCADE, null=True, blank=True)
     id_producto = models.ForeignKey('Producto', on_delete=models.CASCADE, null=True, blank=True)
@@ -139,8 +150,13 @@ class DetalleCompra(models.Model):
     class Meta:
         db_table = 'DetalleCompra'
 
-class Producto(models.Model):
+class Producto(ClaseModelo):
     id_producto = models.AutoField(primary_key=True)
+    codigo = models.CharField(
+        max_length=20,
+        unique=True
+    )
+    codigo_barra = models.CharField(max_length=50)
     nombre = models.CharField(max_length=100, null=True, blank=True)
     precio = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     stock = models.IntegerField(null=True, blank=True)
@@ -153,17 +169,17 @@ class Producto(models.Model):
     class Meta:
         db_table = 'Producto'
 
-class Venta(models.Model):
+class Venta(ClaseModelo):
     id_venta = models.AutoField(primary_key=True)
     fecha = models.DateField(null=True, blank=True)
     total = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     id_cliente = models.ForeignKey('Cliente', on_delete=models.CASCADE, null=True, blank=True)
-    id_usuario = models.ForeignKey('Usuario', on_delete=models.CASCADE, null=True, blank=True)
+    #id_usuario = models.ForeignKey('Usuario', on_delete=models.CASCADE, null=True, blank=True, related_name='ventas_realizadas')
 
     class Meta:
         db_table = 'Venta'
 
-class DetalleVenta(models.Model):
+class DetalleVenta(ClaseModelo):
     id_detalle = models.AutoField(primary_key=True)
     id_venta = models.ForeignKey('Venta', on_delete=models.CASCADE, null=True, blank=True)
     id_producto = models.ForeignKey('Producto', on_delete=models.CASCADE, null=True, blank=True)
@@ -172,24 +188,3 @@ class DetalleVenta(models.Model):
 
     class Meta:
         db_table = 'DetalleVenta'
-
-def add_arguments(self, parser):
-    super().add_arguments(parser)
-    parser.add_argument(
-        '--rol',
-        type=str,
-        choices=[choice[0] for choice in ROLE_CHOICES],
-        help='Rol del usuario (Vendedor, Supervisor, Operador, Administrador)'
-    )
-
-def handle(self, *args, **options):
-    rol = options.get('rol')
-    if not rol:
-        # Si no se pasa por argumento, pedirlo por input
-        roles = [choice[0] for choice in ROLE_CHOICES]
-        rol = input(f"Rol ({', '.join(roles)}): ")
-        if rol not in roles:
-            raise CommandError(f"Rol debe ser uno de: {', '.join(roles)}")
-    options['rol'] = rol
-    super().handle(*args, **options)
-

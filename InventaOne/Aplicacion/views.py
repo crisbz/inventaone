@@ -5,12 +5,16 @@ from django.views import generic
 from django.core.exceptions import PermissionDenied
 from django.urls import reverse_lazy
 from .forms import UsuarioCreationForm
-from .models import Usuario, Cliente
+from Aplicacion.models import *
+from Aplicacion.forms import *
+#from .models import Usuario, Cliente, Categoria
 from django.views.decorators.http import require_POST
 from django.views.generic.edit import CreateView
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, Http404
 from django.template.loader import render_to_string
+from django.apps import apps
+from .mixins import AjaxFormMixin # Importa tu mixin personalizado si lo tienes
 # TODO: Importa o define aquí tu clase personalizada 'SinPrivilegios'
 # from .mixins import SinPrivilegios
 
@@ -30,11 +34,6 @@ class RoleRequiredMixin:
 class Home(LoginRequiredMixin, generic.TemplateView):
     template_name = 'home.html'
     login_url = 'Aplicacion:login'
-
-# Vista para el dashboard del Producto
-class VistaSoloAdmin(RoleRequiredMixin, generic.TemplateView):
-    template_name = 'producto/productos.html'
-    allowed_roles = ['Administrador']
 
 # Vista del dashboard de administración
 
@@ -57,7 +56,7 @@ class UsuariosView(RoleRequiredMixin, generic.ListView):
 # class SinPrivilegios(PermissionRequiredMixin):
 #     ...
 
-# 
+# esto esta para  eliminar
 class VistaBaseCreate(SuccessMessageMixin, LoginRequiredMixin, generic.CreateView):
     context_object_name = 'obj'
     success_message = "Registro Agregado Satisfactoriamente"
@@ -112,6 +111,19 @@ def toggle_usuario_activo(request, pk):
     usuario.save()
     return JsonResponse({'success': True, 'is_active': usuario.is_active})
 
+@login_required
+@require_POST
+def toggle_estado(request, modelo, pk):
+    try:
+        Model = apps.get_model('Aplicacion', modelo)
+        obj = Model.objects.get(pk=pk)
+    except Exception:
+        return JsonResponse({'success': False, 'error': 'Objeto no encontrado'})
+
+    obj.estado = not obj.estado
+    obj.save()
+    return JsonResponse({'success': True, 'estado': obj.estado})
+
 # class UsuarioEdit(VistaBaseEdit):
 #     model = Usuario
 #     template_name = "usuarios/usuario_form.html"
@@ -130,3 +142,168 @@ def toggle_usuario_activo(request, pk):
 #         context = self.get_context_data(object=self.object, form=form, t=t)
 #         print(form_class, form, context)
 #         return self.render_to_response(context)
+
+class CategoriaListView(RoleRequiredMixin, generic.ListView):
+    model = Categoria
+    template_name = 'inventario/list_categoria.html'
+    context_object_name = 'obj'
+    allowed_roles = ['Administrador', 'Supervisor']  # O los roles que quieras permitir
+
+
+from .forms import CategoriaForm  # Asegúrate de tener este formulario
+
+class CreateCategoriaView(RoleRequiredMixin, AjaxFormMixin, CreateView):
+    template_name = 'inventario/categoria_form.html'  # Crea esta plantilla si no existe
+    form_class = CategoriaForm
+    allowed_roles = ['Administrador', 'Supervisor']
+    success_url = reverse_lazy('Aplicacion:categorias')
+    
+    
+
+# Editar una categoría existente    
+class EditCategoriaView(RoleRequiredMixin, AjaxFormMixin, generic.UpdateView):
+    model = Categoria
+    template_name = 'inventario/categoria_form.html'
+    form_class = CategoriaForm
+    allowed_roles = ['Administrador', 'Supervisor']
+    success_url = reverse_lazy('Aplicacion:categorias')
+
+# Eliminar una categoría existente
+@login_required
+@require_POST
+def delete_objeto(request, modelo, pk):
+    try:
+        Model = apps.get_model('Aplicacion', modelo)
+        obj = Model.objects.get(pk=pk)
+        obj.delete()
+        return JsonResponse({'success': True})
+    except Exception:
+        return JsonResponse({'success': False, 'error': 'Objeto no encontrado'})
+
+############################### SUBCATEGORÍAS ####################################
+
+    
+# Vista para listar subcategorías
+class SubcategoriaListView(RoleRequiredMixin, generic.ListView):
+    model = Subcategoria
+    template_name = 'inventario/list_subcategoria.html'
+    context_object_name = 'obj'
+    allowed_roles = ['Administrador', 'Supervisor']  # O los roles que quieras permitir
+
+
+
+# Vista para crear una nueva subcategoría
+class CreateSubcategoriaView(RoleRequiredMixin,AjaxFormMixin, CreateView):
+    template_name = 'inventario/subcategoria_form.html'  # Crea esta plantilla si no existe
+    form_class = SubCategoriaForm
+    allowed_roles = ['Administrador', 'Supervisor']
+    success_url = reverse_lazy('Aplicacion:categorias')
+    
+        
+# Editar una subcategoría existente
+class EditSubcategoriaView(RoleRequiredMixin,AjaxFormMixin, generic.UpdateView):
+    model =  Subcategoria
+    template_name = 'inventario/subcategoria_form.html'
+    form_class =  SubCategoriaForm
+    allowed_roles = ['Administrador', 'Supervisor']
+    success_url = reverse_lazy('Aplicacion:subcategorias')
+
+################################ MARCAS####################################
+
+
+# Vista para listar marcas
+class MarcaListView(RoleRequiredMixin, generic.ListView):
+    model =  Marca
+    template_name = 'inventario/list_marca.html'
+    context_object_name = 'obj'
+    allowed_roles = ['Administrador', 'Supervisor']  # O los roles que quieras permitir
+
+
+
+# Vista para crear una nueva  marca
+class CreateMarcaView(RoleRequiredMixin,AjaxFormMixin,CreateView):
+    template_name = 'inventario/marca_form.html'  # Crea esta plantilla si no existe
+    form_class = MarcaForm
+    allowed_roles = ['Administrador', 'Supervisor']
+    success_url = reverse_lazy('Aplicacion:marcas')
+    
+    
+class EditMarcaView(RoleRequiredMixin,AjaxFormMixin, generic.UpdateView):
+    model =  Marca
+    template_name = 'inventario/marca_form.html'
+    form_class =  MarcaForm
+    allowed_roles = ['Administrador', 'Supervisor']
+    success_url = reverse_lazy('Aplicacion:marcas')
+
+############################### UNIDADES DE MEDIDA ####################################
+
+
+# Vista para listar  unidades de medida
+class UnidadMedidaListView(RoleRequiredMixin, generic.ListView):
+    model =   UnidadMedida
+    template_name = 'inventario/list_unidad_medida.html'
+    context_object_name = 'obj'
+    allowed_roles = ['Administrador', 'Supervisor']  # O los roles que quieras permitir
+
+
+class CreateUnidadMedidaView(RoleRequiredMixin,AjaxFormMixin,CreateView):
+    template_name = 'inventario/unidad_medida_form.html'  # Crea esta plantilla si no existe
+    form_class = UnidadMedidaForm
+    allowed_roles = ['Administrador', 'Supervisor']
+    success_url = reverse_lazy('Aplicacion:unidadmedida')
+    
+    
+
+class EditUnidadMedidaView(RoleRequiredMixin,AjaxFormMixin, generic.UpdateView):
+    model =  UnidadMedida
+    template_name = 'inventario/unidad_medida_form.html'
+    form_class =  UnidadMedidaForm
+    allowed_roles = ['Administrador', 'Supervisor']
+    success_url = reverse_lazy('Aplicacion:unidadmedida')
+
+
+############################# PROVEEDORES ####################################
+# Vista para listar proveedores
+class ProveedorListView(RoleRequiredMixin, generic.ListView):
+    model =  Proveedor
+    template_name = 'proveedor/list_proveedor.html'
+    context_object_name = 'obj'
+    allowed_roles = ['Administrador', 'Supervisor']  # O los roles que quieras permitir
+
+
+class CreateProveedorView(RoleRequiredMixin,AjaxFormMixin,CreateView):
+    template_name = 'proveedor/proveedor_form.html'  # Crea esta plantilla si no existe
+    form_class = ProveedorForm
+    allowed_roles = ['Administrador', 'Supervisor']
+    success_url = reverse_lazy('Aplicacion:proveedores')
+    
+    
+class EditProveedorView(RoleRequiredMixin,AjaxFormMixin, generic.UpdateView):
+    model =  Proveedor
+    template_name = 'proveedor/proveedor_form.html'
+    form_class =  ProveedorForm
+    allowed_roles = ['Administrador', 'Supervisor']
+    success_url = reverse_lazy('Aplicacion:proveedores')
+
+##########################CLIENTES####################################
+# vista para listar clientes
+class ClienteListView(RoleRequiredMixin, generic.ListView):
+    model = Cliente
+    template_name = 'cliente/list_cliente.html'
+    context_object_name = 'obj'
+    allowed_roles = ['Administrador', 'Supervisor']  # O los roles que quieras permitir
+    
+
+# Vista para crear un nuevo cliente    
+class CreateClienteView(RoleRequiredMixin,AjaxFormMixin,CreateView):
+    template_name = 'cliente/cliente_form.html'  # Crea esta plantilla si no existe
+    form_class = ClienteForm
+    allowed_roles = ['Administrador', 'Supervisor']
+    success_url = reverse_lazy('Aplicacion:clientes')
+
+class EditClienteView(RoleRequiredMixin,AjaxFormMixin, generic.UpdateView):
+    model =  Cliente
+    template_name = 'cliente/cliente_form.html'
+    form_class =  ClienteForm
+    allowed_roles = ['Administrador', 'Supervisor']
+    success_url = reverse_lazy('Aplicacion:clientes')
