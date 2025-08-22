@@ -1,17 +1,15 @@
-<!-- Modal de Confirmación -->
-<div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="errorModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
-    <div class="modal-content border-warning">
-      <div class="modal-header bg-warning text-dark">
-        <h5 class="modal-title">Confirmar acción</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+    <div class="modal-content border-danger">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Error</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
-      <div class="modal-body" id="confirmModalBody">
-        <!-- Texto dinámico -->
+      <div class="modal-body">
+        <!-- Aquí se muestra el mensaje de error -->
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" class="btn btn-warning" id="confirmActionBtn">Aceptar</button>
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Entendido</button>
       </div>
     </div>
   </div>

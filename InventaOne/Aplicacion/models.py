@@ -59,6 +59,8 @@ class Categoria(ClaseModelo):
     nombre = models.CharField(max_length=100, null=True, blank=True)
     
     
+    # Recordatorio: __str__ define el texto legible que verás en selects, admin y plantillas.
+    # Usamos 'nombre' y dejamos un fallback por si está vacío o nulo.
     def __str__(self):
         return self.nombre or f"Categoría {self.id_categoria}"
 
@@ -70,12 +72,20 @@ class Subcategoria(ClaseModelo):
     nombre = models.CharField(max_length=100, null=True, blank=True)
     id_categoria = models.ForeignKey('Categoria', on_delete=models.CASCADE, null=True, blank=True)
 
+    # Recordatorio: mostrar el 'nombre' en desplegables/listas; fallback si no hay nombre.
+    def __str__(self):
+        return self.nombre or f"Subcategoría {self.id_subcategoria}"
+
     class Meta:
         db_table = 'Subcategoria'
 
 class Marca(ClaseModelo):
     id_marca = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=100, null=True, blank=True)
+
+    # Recordatorio: 'nombre' es el identificador visible; usa fallback para evitar cadenas vacías.
+    def __str__(self):
+        return self.nombre or f"Marca {self.id_marca}"
 
     class Meta:
         db_table = 'Marca'
@@ -84,6 +94,10 @@ class UnidadMedida(ClaseModelo):
     id_unidad = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=50, null=True, blank=True)
     
+    # Recordatorio: usar 'nombre' para la representación y fallback si está vacío.
+    def __str__(self):
+        return self.nombre or f"Unidad {self.id_unidad}"
+
     class Meta:
         db_table = 'UnidadMedida'
 
@@ -96,6 +110,11 @@ class Proveedor(ClaseModelo):
     contacto = models.CharField(max_length=100, null=True, blank=True)
     telefono = models.CharField(max_length=20, null=True, blank=True)
     correo = models.CharField(max_length=100, null=True, blank=True)
+
+    # Recordatorio: componer nombre legible; si no hay datos, usar RUT o un fallback con el ID.
+    def __str__(self):
+        nombre_completo = " ".join([p for p in [self.nombre, self.apellido_paterno, self.apellido_materno] if p]).strip()
+        return nombre_completo or self.rut or f"Proveedor {self.id_proveedor}"
 
     class Meta:
         db_table = 'Proveedor'
@@ -154,7 +173,9 @@ class Producto(ClaseModelo):
     id_producto = models.AutoField(primary_key=True)
     codigo = models.CharField(
         max_length=20,
-        unique=True
+        unique=True,
+        null=True,      # ← temporal
+        blank=True      # ← temporal
     )
     codigo_barra = models.CharField(max_length=50)
     nombre = models.CharField(max_length=100, null=True, blank=True)
@@ -165,6 +186,10 @@ class Producto(ClaseModelo):
     id_marca = models.ForeignKey('Marca', on_delete=models.CASCADE, null=True, blank=True)
     id_unidad = models.ForeignKey('UnidadMedida', on_delete=models.CASCADE, null=True, blank=True)
     id_proveedor = models.ForeignKey('Proveedor', on_delete=models.CASCADE, null=True, blank=True)
+
+    # Recordatorio: mostrar 'nombre' del producto; si falta, usar 'codigo' y como último recurso el ID.
+    def __str__(self):
+        return self.nombre or self.codigo or f"Producto {self.id_producto}"
 
     class Meta:
         db_table = 'Producto'

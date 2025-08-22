@@ -31,15 +31,20 @@ class RoleRequiredMixin:
         raise PermissionDenied  # Muestra error 403 si no tiene el rol adecuado
 
 # Vista de inicio
-class Home(LoginRequiredMixin, generic.TemplateView):
+class Home(generic.TemplateView):
     template_name = 'home.html'
-    login_url = 'Aplicacion:login'
-
+    
+    def get(self, request, *args, **kwargs):
+        # Si el usuario está autenticado, redirigir al dashboard
+        if request.user.is_authenticated:
+            return redirect('/dashboard/')
+        # Si no está autenticado, redirigir al login
+        return redirect('/login/')
 # Vista del dashboard de administración
 
 class AdminDashboardView(RoleRequiredMixin, generic.TemplateView):
     template_name = 'dashboard.html'
-    allowed_roles = ['Administrador']
+    allowed_roles = ['Administrador', 'Supervisor']  # O los roles que quieras permitir
 
 
 # VER USUARIOS
@@ -47,7 +52,7 @@ class UsuariosView(RoleRequiredMixin, generic.ListView):
     model = Usuario
     template_name = 'usuarios/usuarios.html'
     context_object_name = 'obj'
-    allowed_roles = ['Administrador']
+    allowed_roles = ['Administrador', 'Supervisor']  # O los roles que quieras permitir
 
     def get_queryset(self):
         return Usuario.objects.exclude(id_usuario=self.request.user.id_usuario)
@@ -56,7 +61,8 @@ class UsuariosView(RoleRequiredMixin, generic.ListView):
 # class SinPrivilegios(PermissionRequiredMixin):
 #     ...
 
-# esto esta para  eliminar
+# esto es una vista base para crear objetos
+# Puedes usarla para crear cualquier modelo que necesites
 class VistaBaseCreate(SuccessMessageMixin, LoginRequiredMixin, generic.CreateView):
     context_object_name = 'obj'
     success_message = "Registro Agregado Satisfactoriamente"
@@ -76,7 +82,7 @@ class VistaBaseCreate(SuccessMessageMixin, LoginRequiredMixin, generic.CreateVie
 class CreateUserView(RoleRequiredMixin, CreateView):
     template_name = 'usuarios/usuario_form.html'
     form_class = UsuarioCreationForm
-    allowed_roles = ['Administrador']
+    allowed_roles = ['Administrador','Supervisor']  # O los roles que quieras permitir
     success_url = reverse_lazy('Aplicacion:usuarios')
 
     def get(self, request, *args, **kwargs):
@@ -99,6 +105,10 @@ class CreateUserView(RoleRequiredMixin, CreateView):
 @login_required
 @require_POST
 def toggle_usuario_activo(request, pk):
+    # Verificar que el usuario sea Administrador
+    if not hasattr(request.user, 'rol') or request.user.rol != 'Administrador':
+        return JsonResponse({'success': False, 'error': 'No tienes permisos para realizar esta acción'})
+    
     try:
         usuario = Usuario.objects.get(pk=pk)
     except Usuario.DoesNotExist:
@@ -168,10 +178,14 @@ class EditCategoriaView(RoleRequiredMixin, AjaxFormMixin, generic.UpdateView):
     allowed_roles = ['Administrador', 'Supervisor']
     success_url = reverse_lazy('Aplicacion:categorias')
 
-# Eliminar una categoría existente
+# esta vista es para eliminar un objeto de cualquier modelo
 @login_required
 @require_POST
 def delete_objeto(request, modelo, pk):
+    # Verificar que el usuario sea Administrador
+    if not hasattr(request.user, 'rol') or request.user.rol != 'Administrador':
+        return JsonResponse({'success': False, 'error': 'No tienes permisos para realizar esta acción'})
+    
     try:
         Model = apps.get_model('Aplicacion', modelo)
         obj = Model.objects.get(pk=pk)
@@ -179,6 +193,11 @@ def delete_objeto(request, modelo, pk):
         return JsonResponse({'success': True})
     except Exception:
         return JsonResponse({'success': False, 'error': 'Objeto no encontrado'})
+
+
+
+
+
 
 ############################### SUBCATEGORÍAS ####################################
 
@@ -307,3 +326,27 @@ class EditClienteView(RoleRequiredMixin,AjaxFormMixin, generic.UpdateView):
     form_class =  ClienteForm
     allowed_roles = ['Administrador', 'Supervisor']
     success_url = reverse_lazy('Aplicacion:clientes')
+
+
+#################### PRODUCTOS ####################
+
+class ProductoListView(RoleRequiredMixin, generic.ListView):
+    model = Producto
+    template_name = 'productos/list_productos.html'
+    context_object_name = 'obj'
+    allowed_roles = ['Administrador', 'Supervisor']  # O los roles que quieras permitir
+
+
+# Vista para crear un nuevo producto
+class CreateProductoView(RoleRequiredMixin,AjaxFormMixin,CreateView):
+    template_name = 'productos/producto_form.html'  # Crea esta plantilla si no existe
+    form_class = ProductoForm
+    allowed_roles = ['Administrador', 'Supervisor']
+    success_url = reverse_lazy('Aplicacion:productos')
+
+class EditProductoView(RoleRequiredMixin,AjaxFormMixin, generic.UpdateView):
+    model =  Producto
+    template_name = 'productos/producto_form.html'
+    form_class =  ProductoForm
+    allowed_roles = ['Administrador', 'Supervisor']
+    success_url = reverse_lazy('Aplicacion:productos')

@@ -174,3 +174,37 @@ class ClienteForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         for field in self.fields:
             self.fields[field].widget.attrs.update({'class': 'form-control'})
+            
+
+class ProductoForm(forms.ModelForm):
+    class Meta:
+        model = Producto
+        fields = [
+            'codigo',
+            'codigo_barra',
+            'nombre',
+            'precio',
+            'stock',
+            'id_categoria',
+            'id_subcategoria',
+            'id_marca',
+            'id_unidad',
+            'id_proveedor',
+        ]
+        widgets = {
+            'codigo': forms.TextInput(attrs={'class': 'form-control'}),
+            'codigo_barra': forms.TextInput(attrs={'class': 'form-control'}),
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'precio': forms.NumberInput(attrs={'class': 'form-control'}),
+            'stock': forms.NumberInput(attrs={'class': 'form-control'}),
+            'id_categoria': forms.Select(attrs={'class': 'form-control'}),
+            'id_subcategoria': forms.Select(attrs={'class': 'form-control'}),
+            'id_marca': forms.Select(attrs={'class': 'form-control'}),
+            'id_unidad': forms.Select(attrs={'class': 'form-control'}),
+            'id_proveedor': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields:
+            self.fields[field].widget.attrs.update({'class': 'form-control'})

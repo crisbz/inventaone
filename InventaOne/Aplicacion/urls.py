@@ -22,7 +22,9 @@ urlpatterns = [
     path('toggle/<str:modelo>/<int:pk>/', toggle_estado, name='toggle_estado'), # esto de manera generica inactivar o activar un objeto de cualquier modelo
     path('categoria/create/', CreateCategoriaView.as_view(), name='create_categoria'),
     path('categoria/edit/<int:pk>/', EditCategoriaView.as_view(), name='edit_categoria'),
+    
     path('<str:modelo>/delete/<int:pk>/', delete_objeto, name='delete_objeto'),  # esto de manera generica eliminar un objeto de cualquier modelo
+    
     path('subcategoria/', SubcategoriaListView.as_view(), name='subcategorias'),
     path('subcategoria/create/', CreateSubcategoriaView.as_view(), name='create_subcategoria'),
     path('subcategoria/edit/<int:pk>/', EditSubcategoriaView.as_view(), name='edit_subcategoria'),
@@ -38,4 +40,7 @@ urlpatterns = [
     path('clientes/', ClienteListView.as_view(), name='clientes'),
     path('clientes/create/', CreateClienteView.as_view(), name='create_cliente'),
     path('clientes/edit/<int:pk>/', EditClienteView.as_view(), name='edit_cliente'),
+    path('productos/', ProductoListView.as_view(), name='productos'),
+    path('productos/create/', CreateProductoView.as_view(), name='create_producto'),
+    path('productos/edit/<int:pk>/', EditProductoView.as_view(), name='edit_producto'),
 ]

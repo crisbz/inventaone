@@ -1,0 +1,121 @@
+<div class="modal-dialog modal-lg">
+  <div class="modal-content">
+    <form id="frm" method="post" action="{{ request.path }}">
+      {% csrf_token %}
+      <div class="col-xl-12 col-md-12 mb-12">
+        <div class="card border-left-success shadow h-100 py-2">
+          <div class="card-body">
+            <div class="row no-gutters align-items-center">
+              <div class="col mr-2">
+                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                  {% if form.instance.pk %}Editar producto{% else %}Nuevo producto{% endif %}
+                </div>
+
+                <div class="dropdown-divider"></div>
+
+                <div class="row">
+                  <div class="col-md-4 mb-3">
+                    <label for="{{ form.codigo.id_for_label }}" class="form-label">Código</label>
+                    {{ form.codigo }}
+                    <div id="error_codigo" class="text-danger small"{% if not form.codigo.errors %} style="display:none;"{% endif %}>
+                      {{ form.codigo.errors|striptags }}
+                    </div>
+                  </div>
+
+                  <div class="col-md-4 mb-3">
+                    <label for="{{ form.codigo_barra.id_for_label }}" class="form-label">Código de barra</label>
+                    {{ form.codigo_barra }}
+                    <div id="error_codigo_barra" class="text-danger small"{% if not form.codigo_barra.errors %} style="display:none;"{% endif %}>
+                      {{ form.codigo_barra.errors|striptags }}
+                    </div>
+                  </div>
+
+                  <div class="col-md-4 mb-3">
+                    <label for="{{ form.nombre.id_for_label }}" class="form-label">Nombre</label>
+                    {{ form.nombre }}
+                    <div id="error_nombre" class="text-danger small"{% if not form.nombre.errors %} style="display:none;"{% endif %}>
+                      {{ form.nombre.errors|striptags }}
+                    </div>
+                  </div>
+
+                  <div class="col-md-4 mb-3">
+                    <label for="{{ form.precio.id_for_label }}" class="form-label">Precio</label>
+                    {{ form.precio }}
+                    <div id="error_precio" class="text-danger small"{% if not form.precio.errors %} style="display:none;"{% endif %}>
+                      {{ form.precio.errors|striptags }}
+                    </div>
+                  </div>
+
+                  <div class="col-md-4 mb-3">
+                    <label for="{{ form.stock.id_for_label }}" class="form-label">Stock</label>
+                    {{ form.stock }}
+                    <div id="error_stock" class="text-danger small"{% if not form.stock.errors %} style="display:none;"{% endif %}>
+                      {{ form.stock.errors|striptags }}
+                    </div>
+                  </div>
+
+                  <div class="col-md-4 mb-3">
+                    <label for="{{ form.id_categoria.id_for_label }}" class="form-label">Categoría</label>
+                    {{ form.id_categoria }}
+                    <div id="error_id_categoria" class="text-danger small"{% if not form.id_categoria.errors %} style="display:none;"{% endif %}>
+                      {{ form.id_categoria.errors|striptags }}
+                    </div>
+                  </div>
+
+                  <div class="col-md-4 mb-3">
+                    <label for="{{ form.id_subcategoria.id_for_label }}" class="form-label">Subcategoría</label>
+                    {{ form.id_subcategoria }}
+                    <div id="error_id_subcategoria" class="text-danger small"{% if not form.id_subcategoria.errors %} style="display:none;"{% endif %}>
+                      {{ form.id_subcategoria.errors|striptags }}
+                    </div>
+                  </div>
+
+                  <div class="col-md-4 mb-3">
+                    <label for="{{ form.id_marca.id_for_label }}" class="form-label">Marca</label>
+                    {{ form.id_marca }}
+                    <div id="error_id_marca" class="text-danger small"{% if not form.id_marca.errors %} style="display:none;"{% endif %}>
+                      {{ form.id_marca.errors|striptags }}
+                    </div>
+                  </div>
+
+                  <div class="col-md-4 mb-3">
+                    <label for="{{ form.id_unidad.id_for_label }}" class="form-label">Unidad</label>
+                    {{ form.id_unidad }}
+                    <div id="error_id_unidad" class="text-danger small"{% if not form.id_unidad.errors %} style="display:none;"{% endif %}>
+                      {{ form.id_unidad.errors|striptags }}
+                    </div>
+                  </div>
+
+                  <div class="col-md-6 mb-3">
+                    <label for="{{ form.id_proveedor.id_for_label }}" class="form-label">Proveedor</label>
+                    {{ form.id_proveedor }}
+                    <div id="error_id_proveedor" class="text-danger small"{% if not form.id_proveedor.errors %} style="display:none;"{% endif %}>
+                      {{ form.id_proveedor.errors|striptags }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="dropdown-divider"></div>
+
+                <div class="row">
+                  <div class="col">
+                    <button type="submit" class="btn btn-danger">
+                      <span class="fa fa-save"></span> Guardar
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="cerrar_modal()">
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-auto">
+                <i class="fas fa-box-open fa-2x text-gray-300"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

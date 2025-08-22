@@ -21,8 +21,50 @@
 {% block home %}
 
 {% endblock home %}
- <!-- Contenedor para el modal (vacío al inicio) -->
-  <div id="popup" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
+
+<!-- Contenedor para el modal (vacío al inicio) -->
+<div id="popup" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
+
+<!-- Modal de Confirmación -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content border-warning">
+      <div class="modal-header bg-warning text-dark">
+        <h5 class="modal-title">
+          <i class="fas fa-exclamation-triangle"></i> Confirmar acción
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body" id="confirmModalBody">
+        <!-- Texto dinámico -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-warning" id="confirmActionBtn">Aceptar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Error -->
+<div class="modal fade" id="errorModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content border-danger">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">
+          <i class="fas fa-exclamation-triangle"></i> Error
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Aquí se muestra el mensaje de error -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Entendido</button>
+      </div>
+    </div>
+  </div>
+</div>
   
   <!-- Scripts -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
@@ -71,157 +113,145 @@
         }
       });
     });
-// Función para abrir el modal
-    function abrir_modal(btn) {
-      const url = $(btn).data("url");
-      $.ajax({
-        url: url,
-        type: 'get',
-        dataType: 'json',
-        success: function(data) {
-          $("#popup").html(data.html_form);
-          $("#popup").modal("show");
-        }
-      });
-    }
-// Función para cerrar el modal
-    function cerrar_modal() {
-      $("#popup").modal("hide");
-    }
 
-    // Captura el submit del formulario dentro del modal
-    $(document).on('submit', '#frm', function(e) {
-      e.preventDefault();
-      const frm = $(this);
-      $.ajax({
-        type: frm.attr('method'),
-        url: frm.attr('action') || window.location.href,
-        data: frm.serialize(),
-        dataType: 'json',
-        success: function(data) {
-          if (data.success) {
-            location.reload();
-          } else {
-            $("#popup").html(data.html_form);
-          }
-        },
-        error: function(xhr, status, error) {
-          alert("Error: " + error);     // Muestras el error en el modal
-        }
-      });
-      return false;
-    });
-
-  // Función para eliminar un usuario
-// Función para eliminar un usuario
-  let selectedUserId = null;
-  let isActive = null;
-
-  function showConfirmModal(userId, currentStatus) {
-    selectedUserId = userId;
-    isActive = currentStatus;
-
-    const message = currentStatus 
-      ? "¿Estás seguro de que deseas desactivar este usuario?"
-      : "¿Estás seguro de que deseas activar este usuario?";
-
-    document.getElementById("confirmModalBody").innerText = message;
-    const modal = new bootstrap.Modal(document.getElementById("confirmModal"));
-    modal.show();
-  }
-
-  document.getElementById("confirmActionBtn").addEventListener("click", function () {
-    // Si es acción de usuario
-    if (typeof selectedUserId !== "undefined" && selectedUserId !== null) {
-      toggleUsuarioActivo(selectedUserId);
-      selectedUserId = null; // Limpia para el siguiente uso
-    }
-    // Si es acción genérica
-    else if (selectedModel && selectedObjId !== null) {
-      confirmToggleEstado();
-      selectedModel = null;
-      selectedObjId = null;
-    }
-    bootstrap.Modal.getInstance(document.getElementById("confirmModal")).hide();
-  });
-
-  function toggleUsuarioActivo(userId) {
-    fetch(`/usuarios/toggle/${userId}/`, {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': getCookie('csrftoken'),
-        'Content-Type': 'application/json'
-      },
-      credentials: 'same-origin'
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        location.reload();  // recarga para reflejar el cambio
-      } else {
-        showErrorModal(data.error || "Ocurrió un error.");
-      }
-    })
-    .catch(error => {
-      showErrorModal("Error de red o del servidor.");
-    });
-  }
-
-  function showErrorModal(message) {
-    document.querySelector('#errorModal .modal-body').innerText = message;
-    const modal = new bootstrap.Modal(document.getElementById("errorModal"));
-    modal.show();
-  }
-
-  function getCookie(name) {
-    const cookieValue = document.cookie.split('; ').find(row => row.startsWith(name + '='));
-    return cookieValue ? decodeURIComponent(cookieValue.split('=')[1]) : null;
-  }
-// Función para obtener el CSRF token
-function getCookie(name) {
-  let cookieValue = null;
-  if (document.cookie && document.cookie !== '') {
-    const cookies = document.cookie.split(';');
-    for (let i = 0; i < cookies.length; i++) {
-      const cookie = cookies[i].trim();
-      if (cookie.substring(0, name.length + 1) === (name + '=')) {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
-      }
-    }
-  }
-  return cookieValue;
-}
-
-function mostrarMensajeError(mensaje) {
-  $('#errorModal .modal-body').text(mensaje);
-  var modal = new bootstrap.Modal(document.getElementById('errorModal'));
-  modal.show();
-}
-
-// --- Activar/desactivar genérico para cualquier modelo con campo 'estado' ---
+// Variables globales para diferentes tipos de acciones
+let selectedUserId = null;
 let selectedModel = null;
 let selectedObjId = null;
 let selectedObjEstado = null;
 let selectedObjName = null;
-let selectedRowNumber = null;  // <-- agrego variable para fila
+let selectedRowNumber = null;
+let deleteModel = null;
+let deleteObjId = null;
+let deleteObjName = null;
+let deleteRowNumber = null;
 
-function showConfirmModalEstado(modelo, objId, currentStatus, objName, rowNumber) {
-  selectedModel = modelo;
-  selectedObjId = objId;
-  selectedObjEstado = currentStatus;
-  selectedObjName = objName;
-  selectedRowNumber = rowNumber;  // asigno fila
+// Función para abrir el modal
+function abrir_modal(btn) {
+  const url = $(btn).data("url");
+  $.ajax({
+    url: url,
+    type: 'get',
+    dataType: 'json',
+    success: function(data) {
+      $("#popup").html(data.html_form);
+      $("#popup").modal("show");
+    }
+  });
+}
 
-  const message = currentStatus
-    ? `¿Estás seguro de que deseas desactivar este registro N°${rowNumber} de nombre ${objName} ?`
-    : `¿Estás seguro de que deseas activar este registro N°${rowNumber} de nombre ${objName} ?`
+// Función para cerrar el modal
+function cerrar_modal() {
+  $("#popup").modal("hide");
+}
+
+// Captura el submit del formulario dentro del modal
+$(document).on('submit', '#frm', function(e) {
+  e.preventDefault();
+  const frm = $(this);
+  $.ajax({
+    type: frm.attr('method'),
+    url: frm.attr('action') || window.location.href,
+    data: frm.serialize(),
+    dataType: 'json',
+    success: function(data) {
+      if (data.success) {
+        location.reload();
+      } else {
+        $("#popup").html(data.html_form);
+      }
+    },
+    error: function(xhr, status, error) {
+      alert("Error: " + error);
+    }
+  });
+  return false;
+});
+
+// Función para activar/desactivar usuarios específicamente
+function showConfirmModal(userId, currentStatus) {
+  // Verificar si el usuario es administrador
+  const userRole = '{{ user.rol }}';
+  
+  if (userRole !== 'Administrador') {
+    // Si no es administrador, mostrar error directamente
+    showErrorModal("No tienes permisos para realizar esta acción");
+    return;
+  }
+  
+  // Si es administrador, continuar con el modal de confirmación
+  selectedUserId = userId;
+  const message = currentStatus 
+    ? "¿Estás seguro de que deseas desactivar este usuario?"
+    : "¿Estás seguro de que deseas activar este usuario?";
 
   document.getElementById("confirmModalBody").innerText = message;
   const modal = new bootstrap.Modal(document.getElementById("confirmModal"));
   modal.show();
 }
 
+// Función genérica para activar/desactivar cualquier modelo
+function showConfirmModalEstado(modelo, objId, currentStatus, objName, rowNumber) {
+  selectedModel = modelo;
+  selectedObjId = objId;
+  selectedObjEstado = currentStatus;
+  selectedObjName = objName;
+  selectedRowNumber = rowNumber;
+
+  const message = currentStatus
+    ? `¿Estás seguro de que deseas desactivar este registro N°${rowNumber} de nombre ${objName}?`
+    : `¿Estás seguro de que deseas activar este registro N°${rowNumber} de nombre ${objName}?`;
+
+  document.getElementById("confirmModalBody").innerText = message;
+  const modal = new bootstrap.Modal(document.getElementById("confirmModal"));
+  modal.show();
+}
+
+// Función para eliminar con modal de confirmación
+function showConfirmDeleteModal(modelo, objId, objName, rowNumber) {
+  // Verificar si el usuario es administrador (esta variable debe ser pasada desde el template)
+  const userRole = '{{ user.rol }}'; // Esto se debe pasar desde Django
+  
+  if (userRole !== 'Administrador') {
+    // Si no es administrador, mostrar error directamente
+    showErrorModal("No tienes permisos para realizar esta acción");
+    return;
+  }
+  
+  // Si es administrador, mostrar modal de confirmación
+  deleteModel = modelo;
+  deleteObjId = objId;
+  deleteObjName = objName;
+  deleteRowNumber = rowNumber;
+
+  const message = `¿Estás seguro de que deseas eliminar N°${rowNumber} "${objName}"?`;
+  document.getElementById("confirmModalBody").innerText = message;
+  const modal = new bootstrap.Modal(document.getElementById("confirmModal"));
+  modal.show();
+}
+
+// Funciones de ejecución
+function toggleUsuarioActivo(userId) {
+  fetch(`/usuarios/toggle/${userId}/`, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': getCookie('csrftoken'),
+      'Content-Type': 'application/json'
+    },
+    credentials: 'same-origin'
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      location.reload();
+    } else {
+      showErrorModal(data.error || "Ocurrió un error.");
+    }
+  })
+  .catch(error => {
+    showErrorModal("Error de red o del servidor.");
+  });
+}
 
 function confirmToggleEstado() {
   if (selectedModel && selectedObjId !== null) {
@@ -245,30 +275,6 @@ function confirmToggleEstado() {
       showErrorModal("Error de red o del servidor.");
     });
   }
-}
-
-// Asocia el botón "Aceptar" del modal a la función confirmToggleEstado
-document.getElementById("confirmActionBtn").addEventListener("click", function () {
-  confirmToggleEstado();
-  bootstrap.Modal.getInstance(document.getElementById("confirmModal")).hide();
-});
-
-// --- Eliminar genérico para cualquier modelo ---
-let deleteModel = null;
-let deleteObjId = null;
-let deleteObjName = null;
-let deleteRowNumber = null;
-
-function showConfirmDeleteModal(modelo, objId, objName, rowNumber) {
-  deleteModel = modelo;
-  deleteObjId = objId;
-  deleteObjName = objName;
-  deleteRowNumber  = rowNumber;
-
-  const message = `¿Estás seguro de que deseas eliminar  N°${rowNumber}  "${objName}"?`;
-  document.getElementById("confirmModalBody").innerText = message;
-  const modal = new bootstrap.Modal(document.getElementById("confirmModal"));
-  modal.show();
 }
 
 function confirmDelete() {
@@ -295,11 +301,57 @@ function confirmDelete() {
   }
 }
 
-// Asocia el botón "Aceptar" del modal a la función confirmDelete
+// EVENT LISTENER UNIFICADO - Un solo addEventListener para todo
 document.getElementById("confirmActionBtn").addEventListener("click", function () {
-  confirmDelete();
+  // Si hay una acción de eliminar pendiente
+  if (deleteModel && deleteObjId !== null) {
+    confirmDelete();
+    // Limpiar variables de eliminación
+    deleteModel = null;
+    deleteObjId = null;
+    deleteObjName = null;
+    deleteRowNumber = null;
+  }
+  // Si hay una acción de toggle estado pendiente
+  else if (selectedModel && selectedObjId !== null) {
+    confirmToggleEstado();
+    // Limpiar variables de toggle
+    selectedModel = null;
+    selectedObjId = null;
+    selectedObjEstado = null;
+    selectedObjName = null;
+    selectedRowNumber = null;
+  }
+  // Si hay una acción de usuario pendiente
+  else if (selectedUserId !== null) {
+    toggleUsuarioActivo(selectedUserId);
+    selectedUserId = null;
+  }
+  
   bootstrap.Modal.getInstance(document.getElementById("confirmModal")).hide();
 });
+
+// Funciones auxiliares
+function showErrorModal(message) {
+  document.querySelector('#errorModal .modal-body').innerText = message;
+  const modal = new bootstrap.Modal(document.getElementById("errorModal"));
+  modal.show();
+}
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
   </script>
 
 
