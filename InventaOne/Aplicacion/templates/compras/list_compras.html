@@ -1,0 +1,112 @@
+{% extends "home.html" %}
+
+{% block page_content %} 
+<div class="container-fluid mt-4">
+  <!-- Título y menú -->
+  <div class="d-flex align-items-center mb-4">
+    <div class="dropdown me-2">
+      <button class="btn btn-link text-dark" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fas fa-cog"></i>
+      </button>
+      <ul class="dropdown-menu">
+        <li>
+          <!-- Botón para abrir modal -->
+          <button class="btn btn-primary" onclick="abrir_modal(this)" data-url="{% url 'Aplicacion:create_compra' %}">
+            <i class="fa fa-user-plus"></i> Agregar compra
+          </button>
+        </li>
+      </ul>
+    </div>
+    <h1 class="h3 mb-0 text-gray-800">Listado de compras</h1>
+  </div>
+
+  <!-- Tabla de compras con detalles -->
+  <div class="card shadow mb-4">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table id="tabla" class="table table-bordered" width="100%">
+          <thead class="thead-dark">
+            <tr>
+              <th>N°</th>
+              <th>nombre producto</th>
+              <th>FECHA compra</th>
+              <th>FECHA factura</th>
+              <th>cantidad de productos comprados</th>
+              <th>subtotal</th>
+              <th>descuento</th>
+              <th>total</th>
+              <th>estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for compra in obj %}
+              {% for det in compra.detallecompra_set.all %}
+                <tr>
+                  <td>{{ forloop.parentloop.counter }}</td>
+                  <td>{{ det.id_producto.nombre }}</td>
+                  <td>{{ compra.fecha }}</td>
+                  <td>{{ compra.fecha_factura }}</td>
+                  <td>{{ det.cantidad }}</td>
+                  <td>{{ det.subtotal }}</td>
+                  <td>{{ compra.descuento }}</td>
+                  <td>{{ compra.total }}</td>
+                  <td>{{ compra.estado }}</td>
+                  <td>
+                    <button 
+                      class="btn btn-warning btn-sm"
+                      onclick="showConfirmModalEstado('Compra', {{ compra.id_compra }}, {{ compra.estado|yesno:'true,false' }}, 'Compra {{ compra.id_compra }}', {{ forloop.counter }})">
+                      {% if compra.estado %}Desactivar{% else %}Activar{% endif %}
+                    </button>
+                    <button 
+                      class="btn btn-sm btn-primary"
+                      onclick="abrir_modal(this)" 
+                      data-url="{% url 'Aplicacion:edit_compra' compra.id_compra %}">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button 
+                      class="btn btn-sm btn-danger"
+                      onclick="showConfirmDeleteModal('Compra', {{ compra.id_compra }}, 'Compra {{ compra.id_compra }}', {{ forloop.counter }})">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td>{{ forloop.parentloop.counter }}</td>
+                  <td class="text-muted">—</td>
+                  <td>{{ compra.fecha }}</td>
+                  <td>{{ compra.fecha_factura }}</td>
+                  <td>0</td>
+                  <td>0.00</td>
+                  <td>{{ compra.descuento }}</td>
+                  <td>{{ compra.total }}</td>
+                  <td>{{ compra.estado }}</td>
+                  <td>
+                    <button 
+                      class="btn btn-warning btn-sm"
+                      onclick="showConfirmModalEstado('Compra', {{ compra.id_compra }}, {{ compra.estado|yesno:'true,false' }}, 'Compra {{ compra.id_compra }}', {{ forloop.counter }})">
+                      {% if compra.estado %}Desactivar{% else %}Activar{% endif %}
+                    </button>
+                    <button 
+                      class="btn btn-sm btn-primary"
+                      onclick="abrir_modal(this)" 
+                      data-url="{% url 'Aplicacion:edit_compra' compra.id_compra %}">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button 
+                      class="btn btn-sm btn-danger"
+                      onclick="showConfirmDeleteModal('Compra', {{ compra.id_compra }}, 'Compra {{ compra.id_compra }}', {{ forloop.counter }})">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock page_content %}

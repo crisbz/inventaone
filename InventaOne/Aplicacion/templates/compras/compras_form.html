@@ -1,0 +1,163 @@
+<div class="modal-dialog modal-lg">
+  <div class="modal-content">
+    <form id="frm" method="post" action="{{ request.path }}">
+      {% csrf_token %}
+      <div class="col-xl-12 col-md-12 mb-12">
+        <div class="card border-left-success shadow h-100 py-2">
+          <div class="card-body">
+            <div class="row no-gutters align-items-center">
+              <div class="col mr-2">
+                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                  {% if form.instance.pk %}Editar compra{% else %}Nueva compra{% endif %}
+                </div>
+
+                <div class="dropdown-divider"></div>
+
+                <div class="row">
+                  <div class="col-md-4 mb-3">
+                    <label for="{{ form.fecha.id_for_label }}" class="form-label">Fecha de compra</label>
+                    {{ form.fecha }}
+                    <div class="text-danger small"{% if not form.fecha.errors %} style="display:none;"{% endif %}>
+                      {{ form.fecha.errors|striptags }}
+                    </div>
+                  </div>
+
+                  <div class="col-md-8 mb-3">
+                    <label for="{{ form.id_proveedor.id_for_label }}" class="form-label">Proveedor</label>
+                    {{ form.id_proveedor }}
+                    <div class="text-danger small"{% if not form.id_proveedor.errors %} style="display:none;"{% endif %}>
+                      {{ form.id_proveedor.errors|striptags }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="dropdown-divider"></div>
+
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h6 class="m-0">Detalle de compra</h6>
+                  <button type="button" class="btn btn-sm btn-outline-primary" id="btnAddRow">
+                    <i class="fas fa-plus"></i> Agregar ítem
+                  </button>
+                </div>
+
+                <div class="table-responsive">
+                  <table class="table table-sm table-bordered align-middle" id="tblDetalles">
+                    <thead class="table-light">
+                      <tr>
+                        <th style="width: 45%">Producto</th>
+                        <th style="width: 15%">Cantidad</th>
+                        <th style="width: 20%">Precio unitario</th>
+                        <th style="width: 15%">Subtotal</th>
+                        <th style="width: 5%"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr class="item-row">
+                        <td>
+                          <select name="producto_id[]" class="form-select form-control">
+                            <option value="">Seleccione producto</option>
+                            {% for p in productos %}
+                              <option value="{{ p.id_producto }}">{{ p.nombre }}{% if p.codigo %} ({{ p.codigo }}){% endif %}</option>
+                            {% endfor %}
+                          </select>
+                        </td>
+                        <td>
+                          <input type="number" name="cantidad[]" class="form-control cantidad" min="1" value="1" />
+                        </td>
+                        <td>
+                          <input type="number" name="precio_unitario[]" class="form-control precio" min="0" step="0.01" value="0.00" />
+                        </td>
+                        <td class="text-end subtotal">0.00</td>
+                        <td class="text-center">
+                          <button type="button" class="btn btn-sm btn-outline-danger btnDelRow">
+                            <i class="fas fa-trash"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <th colspan="3" class="text-end">Total</th>
+                        <th class="text-end" id="totalCompra">0.00</th>
+                        <th></th>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+
+                <div class="dropdown-divider"></div>
+
+                <div class="row">
+                  <div class="col">
+                    <button type="submit" class="btn btn-danger">
+                      <span class="fa fa-save"></span> Guardar
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="cerrar_modal()">
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-auto">
+                <i class="fas fa-box-open fa-2x text-gray-300"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const tbl = document.getElementById('tblDetalles');
+    const tbody = tbl.querySelector('tbody');
+    const btnAdd = document.getElementById('btnAddRow');
+    const totalEl = document.getElementById('totalCompra');
+
+    function calcRow(tr) {
+      const qty = parseFloat(tr.querySelector('.cantidad').value || '0');
+      const price = parseFloat(tr.querySelector('.precio').value || '0');
+      const sub = (qty * price) || 0;
+      tr.querySelector('.subtotal').textContent = sub.toFixed(2);
+      calcTotal();
+    }
+
+    function calcTotal() {
+      let total = 0;
+      tbody.querySelectorAll('tr').forEach(tr => {
+        total += parseFloat(tr.querySelector('.subtotal').textContent || '0');
+      });
+      totalEl.textContent = total.toFixed(2);
+    }
+
+    function bindRow(tr) {
+      tr.querySelector('.cantidad').addEventListener('input', () => calcRow(tr));
+      tr.querySelector('.precio').addEventListener('input', () => calcRow(tr));
+      tr.querySelector('.btnDelRow').addEventListener('click', () => {
+        if (tbody.querySelectorAll('tr').length > 1) {
+          tr.remove();
+          calcTotal();
+        }
+      });
+      calcRow(tr);
+    }
+
+    btnAdd.addEventListener('click', () => {
+      const first = tbody.querySelector('tr');
+      const clone = first.cloneNode(true);
+      // Reset values
+      clone.querySelectorAll('input').forEach(inp => inp.value = inp.classList.contains('cantidad') ? '1' : '0.00');
+      const sel = clone.querySelector('select');
+      if (sel) sel.selectedIndex = 0;
+      clone.querySelector('.subtotal').textContent = '0.00';
+      tbody.appendChild(clone);
+      bindRow(clone);
+    });
+
+    // Bind initial row
+    bindRow(tbody.querySelector('tr'));
+  })();
+</script>

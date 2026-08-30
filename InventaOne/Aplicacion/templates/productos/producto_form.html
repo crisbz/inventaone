@@ -48,7 +48,11 @@
 
                   <div class="col-md-4 mb-3">
                     <label for="{{ form.stock.id_for_label }}" class="form-label">Stock</label>
-                    {{ form.stock }}
+                    {% if not form.instance.pk %}
+                      <input type="number" name="stock" id="{{ form.stock.id_for_label }}" class="form-control" value="0" disabled>
+                    {% else %}
+                      {{ form.stock }}
+                    {% endif %}
                     <div id="error_stock" class="text-danger small"{% if not form.stock.errors %} style="display:none;"{% endif %}>
                       {{ form.stock.errors|striptags }}
                     </div>

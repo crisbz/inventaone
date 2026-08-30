@@ -13,6 +13,7 @@ from django.views.generic.edit import CreateView
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, Http404
 from django.template.loader import render_to_string
+from decimal import Decimal
 from django.apps import apps
 from .mixins import AjaxFormMixin # Importa tu mixin personalizado si lo tienes
 # TODO: Importa o define aquí tu clase personalizada 'SinPrivilegios'
@@ -344,9 +345,160 @@ class CreateProductoView(RoleRequiredMixin,AjaxFormMixin,CreateView):
     allowed_roles = ['Administrador', 'Supervisor']
     success_url = reverse_lazy('Aplicacion:productos')
 
+    def form_valid(self, form):
+        form.instance.stock = 0  # Seguridad backend: stock siempre inicia en 0
+        return super().form_valid(form)
+
 class EditProductoView(RoleRequiredMixin,AjaxFormMixin, generic.UpdateView):
     model =  Producto
     template_name = 'productos/producto_form.html'
     form_class =  ProductoForm
     allowed_roles = ['Administrador', 'Supervisor']
     success_url = reverse_lazy('Aplicacion:productos')
+
+
+#################### COMPRAS ####################
+
+class CompraListView(RoleRequiredMixin, generic.ListView):
+    model = Compra
+    template_name = 'compras/list_compras.html'
+    context_object_name = 'obj'
+    allowed_roles = ['Administrador', 'Supervisor']
+
+    def get_queryset(self):
+        return (
+            Compra.objects.all()
+            .prefetch_related('detallecompra_set__id_producto', 'id_proveedor')
+            .order_by('-id_compra')
+        )
+
+
+class CreateCompraView(RoleRequiredMixin, AjaxFormMixin, CreateView):
+    template_name = 'compras/compras_form.html'
+    form_class = CompraForm
+    allowed_roles = ['Administrador', 'Supervisor']
+    success_url = reverse_lazy('Aplicacion:compras')
+
+    def get(self, request, *args, **kwargs):
+        # Sobrescribimos para enviar también los productos al modal
+        form = self.form_class()
+        context = {
+            'form': form,
+            'productos': Producto.objects.filter(estado=True).order_by('nombre')
+        }
+        html_form = render_to_string(self.template_name, context, request=request)
+        return JsonResponse({'success': False, 'html_form': html_form})
+
+    def post(self, request, *args, **kwargs):
+        # Crear cabecera
+        form = self.form_class(request.POST)
+        if not form.is_valid():
+            context = {
+                'form': form,
+                'productos': Producto.objects.filter(estado=True).order_by('nombre')
+            }
+            html_form = render_to_string(self.template_name, context, request=request)
+            return JsonResponse({'success': False, 'html_form': html_form})
+
+        compra = form.save()
+
+        # Crear detalles desde arrays del formulario
+        productos_ids = request.POST.getlist('producto_id[]')
+        cantidades = request.POST.getlist('cantidad[]')
+        precios = request.POST.getlist('precio_unitario[]')
+
+        created = 0
+        for pid, cant, prec in zip(productos_ids, cantidades, precios):
+            if not pid:
+                continue
+            try:
+                prod = Producto.objects.get(pk=int(pid))
+                cantidad = int(cant or 0)
+                precio = Decimal(prec or '0')
+            except Exception:
+                continue
+            if cantidad <= 0 or precio < 0:
+                continue
+            DetalleCompra.objects.create(
+                id_compra=compra,
+                id_producto=prod,
+                cantidad=cantidad,
+                precio_unitario=precio,
+            )
+            created += 1
+
+        if created == 0:
+            compra.delete()
+            form.add_error(None, 'Debe agregar al menos un ítem válido.')
+            context = {
+                'form': form,
+                'productos': Producto.objects.filter(estado=True).order_by('nombre')
+            }
+            html_form = render_to_string(self.template_name, context, request=request)
+            return JsonResponse({'success': False, 'html_form': html_form})
+
+        return JsonResponse({'success': True})
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['productos'] = Producto.objects.filter(estado=True).order_by('nombre')
+        return ctx
+
+    def post(self, request, *args, **kwargs):
+        # Crear cabecera de compra
+        form = self.form_class(request.POST)
+        if not form.is_valid():
+            context = {'form': form, 'productos': Producto.objects.filter(estado=True).order_by('nombre')}
+            html_form = render_to_string(self.template_name, context, request=request)
+            return JsonResponse({'success': False, 'html_form': html_form})
+
+        compra = form.save()
+
+        # Procesar detalle: listas paralelas desde el formulario
+        productos_ids = request.POST.getlist('producto_id[]')
+        cantidades = request.POST.getlist('cantidad[]')
+        precios = request.POST.getlist('precio_unitario[]')
+
+        created_any = False
+        for pid, cant, prec in zip(productos_ids, cantidades, precios):
+            if not pid:
+                continue
+            try:
+                prod = Producto.objects.get(pk=int(pid))
+            except (Producto.DoesNotExist, ValueError):
+                continue
+            try:
+                cantidad = int(cant or 0)
+                precio = Decimal(prec or '0')
+            except Exception:
+                continue
+            if cantidad <= 0 or precio < 0:
+                continue
+            DetalleCompra.objects.create(
+                id_compra=compra,
+                id_producto=prod,
+                cantidad=cantidad,
+                precio_unitario=precio,
+            )
+            created_any = True
+
+        if not created_any:
+            # Si no hay detalles válidos, borra la cabecera para evitar registros vacíos
+            compra.delete()
+            form.add_error(None, 'Debe agregar al menos un ítem válido a la compra.')
+            context = {'form': form, 'productos': Producto.objects.filter(estado=True).order_by('nombre')}
+            html_form = render_to_string(self.template_name, context, request=request)
+            return JsonResponse({'success': False, 'html_form': html_form})
+
+        return JsonResponse({'success': True})
+
+
+class EditCompraView(RoleRequiredMixin, AjaxFormMixin, generic.UpdateView):
+    model = Compra
+    template_name = 'compras/compras_form.html'
+    form_class = CompraForm
+    allowed_roles = ['Administrador', 'Supervisor']
+    success_url = reverse_lazy('Aplicacion:compras')
+    
+    
+    

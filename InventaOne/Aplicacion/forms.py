@@ -203,8 +203,26 @@ class ProductoForm(forms.ModelForm):
             'id_unidad': forms.Select(attrs={'class': 'form-control'}),
             'id_proveedor': forms.Select(attrs={'class': 'form-control'}),
         }
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields:
+            self.fields[field].widget.attrs.update({'class': 'form-control'})
+            self.fields[field].widget.attrs.update({'class': 'form-control'})
+
+
+class CompraForm(forms.ModelForm):
+    class Meta:
+        model = Compra
+        fields = [
+            'fecha',
+            'id_proveedor',
+        ]
+        widgets = {
+            'fecha': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'id_proveedor': forms.Select(attrs={'class': 'form-control'}),
+        }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields:
+            self.fields[field].widget.attrs.update({'class': 'form-control'})
             self.fields[field].widget.attrs.update({'class': 'form-control'})

@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractUser
+from decimal import Decimal
 from django.db import models
 from django.core.management.base import CommandError
 from django.conf import settings
@@ -151,6 +152,8 @@ class DetallePedido(ClaseModelo):
     class Meta:
         db_table = 'DetallePedido'
 
+
+
 class Compra(ClaseModelo):
     id_compra = models.AutoField(primary_key=True)
     fecha = models.DateField(null=True, blank=True)
@@ -158,6 +161,27 @@ class Compra(ClaseModelo):
 
     class Meta:
         db_table = 'Compra'
+
+    # Propiedades calculadas para soportar la plantilla sin migraciones
+    @property
+    def fecha_factura(self):
+        return None
+
+    @property
+    def descuento(self):
+        return Decimal('0')
+
+    @property
+    def subtotal(self):
+        total = Decimal('0')
+        for det in self.detallecompra_set.all():
+            total += det.subtotal
+        return total
+
+    @property
+    def total(self):
+        return self.subtotal - self.descuento
+
 
 class DetalleCompra(ClaseModelo):
     id_detalle = models.AutoField(primary_key=True)
@@ -168,6 +192,12 @@ class DetalleCompra(ClaseModelo):
 
     class Meta:
         db_table = 'DetalleCompra'
+
+    @property
+    def subtotal(self):
+        if self.cantidad and self.precio_unitario is not None:
+            return Decimal(self.cantidad) * Decimal(self.precio_unitario)
+        return Decimal('0')
 
 class Producto(ClaseModelo):
     id_producto = models.AutoField(primary_key=True)
@@ -180,7 +210,7 @@ class Producto(ClaseModelo):
     codigo_barra = models.CharField(max_length=50)
     nombre = models.CharField(max_length=100, null=True, blank=True)
     precio = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    stock = models.IntegerField(null=True, blank=True)
+    stock = models.IntegerField(default=0, null=True, blank=True)
     id_categoria = models.ForeignKey('Categoria', on_delete=models.CASCADE, null=True, blank=True)
     id_subcategoria = models.ForeignKey('Subcategoria', on_delete=models.CASCADE, null=True, blank=True)
     id_marca = models.ForeignKey('Marca', on_delete=models.CASCADE, null=True, blank=True)
