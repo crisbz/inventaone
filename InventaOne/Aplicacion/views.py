@@ -480,7 +480,7 @@ class CreateCompraView(RoleRequiredMixin, AjaxFormMixin, CreateView):
                 cantidad=cantidad,
                 precio_unitario=precio,
             )
-            created_any = True
+            created_a1ny = True
 
         if not created_any:
             # Si no hay detalles válidos, borra la cabecera para evitar registros vacíos
