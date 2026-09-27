@@ -15,9 +15,13 @@
       </ul>
       <ul class="navbar-nav ms-auto">
         <li class="nav-item">
-          <a class="nav-link" href="#">
-            <span class="me-2 d-none d-lg-inline text-gray-600 small">usuario</span>
-            <img class="img-profile rounded-circle" src="https://via.placeholder.com/40" alt="Avatar" />
+          <a class="nav-link">
+            <span class="me-2 d-none d-lg-inline text-gray-600 small">
+              {{ request.user.nombre_completo }}
+              {% if request.user.rol %}<small class="text-muted">({{ request.user.rol }})</small>{% endif %}
+            </span>
+            <img class="img-profile rounded-circle" src="{{ request.user.foto_url }}" alt="Avatar"
+                 style="width: 40px; height: 40px; object-fit: cover;" />
           </a>
         </li>
         <li class="nav-item dropdown">
@@ -26,7 +30,7 @@
           </a>
           <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="settingsDropdown">
             <li>
-              <a class="dropdown-item" href="#"><i class="fas fa-user-edit me-2"></i>Actualizar Perfil</a>
+              <a class="dropdown-item" href="{% url 'Aplicacion:perfil' %}"><i class="fas fa-user-edit me-2"></i>Actualizar Perfil</a>
             </li>
             <li><hr class="dropdown-divider"></li>
             <li>
@@ -62,5 +66,11 @@
 
   </div> <!-- cierre div id content -->
 </div> <!-- cierre div id content-wrapper -->
+
+<!-- Asistente virtual (ChatBot IA) - visible en todas las vistas -->
+{% include 'includes/chatbot.html' %}
+
+<!-- Desplegables con buscador (Tom Select) en los formularios -->
+{% include 'includes/select_search.html' %}
 
 {% endblock home %}

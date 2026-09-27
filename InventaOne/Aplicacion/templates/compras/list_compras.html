@@ -1,6 +1,6 @@
 {% extends "home.html" %}
 
-{% block page_content %} 
+{% block page_content %}
 <div class="container-fluid mt-4">
   <!-- Título y menú -->
   <div class="d-flex align-items-center mb-4">
@@ -36,6 +36,7 @@
               <th>descuento</th>
               <th>total</th>
               <th>estado</th>
+              <th>Recepción</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -53,18 +54,34 @@
                   <td>{{ compra.total }}</td>
                   <td>{{ compra.estado }}</td>
                   <td>
-                    <button 
+                    {% if compra.recibida %}
+                      <span class="badge bg-success"><i class="fas fa-check"></i> Recibida</span>
+                      {% if compra.fecha_recepcion %}<br><small class="text-muted">{{ compra.fecha_recepcion }}</small>{% endif %}
+                    {% else %}
+                      <span class="badge bg-warning text-dark">Pendiente</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if not compra.recibida %}
+                    <button
+                      class="btn btn-sm btn-success"
+                      title="Recibir compra (sumar al stock)"
+                      onclick="abrirModalRecibir({{ compra.id_compra }}, '{% url 'Aplicacion:recibir_compra' compra.id_compra %}', {{ forloop.parentloop.counter }})">
+                      <i class="fas fa-cart-arrow-down"></i>
+                    </button>
+                    {% endif %}
+                    <button
                       class="btn btn-warning btn-sm"
                       onclick="showConfirmModalEstado('Compra', {{ compra.id_compra }}, {{ compra.estado|yesno:'true,false' }}, 'Compra {{ compra.id_compra }}', {{ forloop.counter }})">
                       {% if compra.estado %}Desactivar{% else %}Activar{% endif %}
                     </button>
-                    <button 
+                    <button
                       class="btn btn-sm btn-primary"
-                      onclick="abrir_modal(this)" 
+                      onclick="abrir_modal(this)"
                       data-url="{% url 'Aplicacion:edit_compra' compra.id_compra %}">
                       <i class="fas fa-edit"></i>
                     </button>
-                    <button 
+                    <button
                       class="btn btn-sm btn-danger"
                       onclick="showConfirmDeleteModal('Compra', {{ compra.id_compra }}, 'Compra {{ compra.id_compra }}', {{ forloop.counter }})">
                       <i class="fas fa-trash"></i>
@@ -83,20 +100,27 @@
                   <td>{{ compra.total }}</td>
                   <td>{{ compra.estado }}</td>
                   <td>
-                    <button 
+                    {% if compra.recibida %}
+                      <span class="badge bg-success"><i class="fas fa-check"></i> Recibida</span>
+                    {% else %}
+                      <span class="badge bg-secondary">Sin productos</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <button
                       class="btn btn-warning btn-sm"
-                      onclick="showConfirmModalEstado('Compra', {{ compra.id_compra }}, {{ compra.estado|yesno:'true,false' }}, 'Compra {{ compra.id_compra }}', {{ forloop.counter }})">
+                      onclick="showConfirmModalEstado('Compra', {{ compra.id_compra }}, {{ compra.estado|yesno:'true,false' }}, 'Compra {{ compra.id_compra }}', {{ forloop.parentloop.counter }})">
                       {% if compra.estado %}Desactivar{% else %}Activar{% endif %}
                     </button>
-                    <button 
+                    <button
                       class="btn btn-sm btn-primary"
-                      onclick="abrir_modal(this)" 
+                      onclick="abrir_modal(this)"
                       data-url="{% url 'Aplicacion:edit_compra' compra.id_compra %}">
                       <i class="fas fa-edit"></i>
                     </button>
-                    <button 
+                    <button
                       class="btn btn-sm btn-danger"
-                      onclick="showConfirmDeleteModal('Compra', {{ compra.id_compra }}, 'Compra {{ compra.id_compra }}', {{ forloop.counter }})">
+                      onclick="showConfirmDeleteModal('Compra', {{ compra.id_compra }}, 'Compra {{ compra.id_compra }}', {{ forloop.parentloop.counter }})">
                       <i class="fas fa-trash"></i>
                     </button>
                   </td>
@@ -109,4 +133,136 @@
     </div>
   </div>
 </div>
+
+<!-- ===== Modal: Recepción de compra ===== -->
+<div class="modal fade" id="modalRecibir" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border:2px solid #1cc88a;border-radius:1rem;overflow:hidden;">
+      <div class="modal-header text-white" style="background:#1cc88a;">
+        <h5 class="modal-title mb-0"><i class="fas fa-shopping-cart"></i> Recepción de compra</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body text-center py-4">
+        <div class="recibir-cart-track mb-3">
+          <i class="fas fa-shopping-cart" id="recibirCart"></i>
+        </div>
+        <p class="mb-1">¿La compra <strong id="recibirCompraLabel"></strong> fue <strong>recibida</strong>?</p>
+        <p class="text-muted small mb-0">
+          Si eliges <strong>Recibido</strong>, se sumará la cantidad comprada al
+          <strong>stock</strong> de cada producto y la compra quedará marcada como recibida.
+        </p>
+        <div id="recibirError" class="text-danger small mt-2" style="display:none;"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times"></i> No
+        </button>
+        <button type="button" class="btn btn-success" id="btnConfirmRecibir">
+          <i class="fas fa-check"></i> Recibido
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .recibir-cart-track {
+    height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  #recibirCart {
+    font-size: 2.6rem;
+    color: #1cc88a;
+  }
+  #recibirCart.moving {
+    animation: recibirCartMove 1s ease-in-out forwards;
+  }
+  @keyframes recibirCartMove {
+    0%   { transform: translateX(-70px) scale(0.9); opacity: 0; }
+    45%  { transform: translateX(0) scale(1);       opacity: 1; }
+    75%  { transform: translateX(0) scale(1.15);    opacity: 1; }
+    100% { transform: translateX(80px) scale(0.9);  opacity: 0; }
+  }
+</style>
+
+<script>
+  (function () {
+    var bsModal = null;
+    var currentUrl = null;
+    var wired = false;
+
+    function $id(id) { return document.getElementById(id); }
+
+    function getCsrf() {
+      if (typeof getCookie === 'function') return getCookie('csrftoken');
+      var m = document.cookie.match(/csrftoken=([^;]+)/);
+      return m ? m[1] : '';
+    }
+
+    function wireConfirm() {
+      if (wired) return;
+      var btn = $id('btnConfirmRecibir');
+      if (!btn) return;
+      btn.addEventListener('click', function () {
+        if (!currentUrl) return;
+        var cart = $id('recibirCart');
+        var errBox = $id('recibirError');
+        btn.disabled = true;
+        errBox.style.display = 'none';
+        // El carrito "se mueve" agregando al stock
+        cart.classList.remove('moving');
+        void cart.offsetWidth; // reinicia la animación
+        cart.classList.add('moving');
+
+        fetch(currentUrl, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': getCsrf() },
+          credentials: 'same-origin'
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            setTimeout(function () {
+              if (data.success) {
+                if (bsModal) bsModal.hide();
+                location.reload();          // el stock ya aumentó
+              } else {
+                btn.disabled = false;
+                errBox.textContent = data.error || 'No se pudo recibir la compra.';
+                errBox.style.display = 'block';
+              }
+            }, 1000);
+          })
+          .catch(function () {
+            btn.disabled = false;
+            errBox.textContent = 'Error de red o del servidor.';
+            errBox.style.display = 'block';
+          });
+      });
+      wired = true;
+    }
+
+    // Se define de inmediato para que el onclick del botón siempre la encuentre.
+    window.abrirModalRecibir = function (idCompra, url, numero) {
+      var modalEl = $id('modalRecibir');
+      if (!modalEl || typeof bootstrap === 'undefined') {
+        alert('No se pudo abrir el diálogo de recepción (Bootstrap no cargó todavía).');
+        return;
+      }
+      if (!bsModal) bsModal = new bootstrap.Modal(modalEl);
+      wireConfirm();
+
+      currentUrl = url;
+      $id('recibirCompraLabel').textContent = 'N° ' + numero;
+      var errBox = $id('recibirError');
+      errBox.style.display = 'none';
+      errBox.textContent = '';
+      $id('recibirCart').classList.remove('moving');
+      $id('btnConfirmRecibir').disabled = false;
+      bsModal.show();
+    };
+  })();
+</script>
 {% endblock page_content %}

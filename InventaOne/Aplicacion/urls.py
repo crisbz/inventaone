@@ -18,6 +18,8 @@ urlpatterns = [
     path('usuarios/', UsuariosView.as_view(), name='usuarios'),
     path('usuarios/toggle/<int:pk>/', toggle_usuario_activo, name='toggle_usuario_activo'),
     path('usuarios/create/', CreateUserView.as_view(), name='create_user'),
+    path('perfil/', PerfilUpdateView.as_view(), name='perfil'),
+    path('chatbot/api/', chatbot_api, name='chatbot_api'),
     path('categoria/', CategoriaListView.as_view(), name='categorias'),
     path('toggle/<str:modelo>/<int:pk>/', toggle_estado, name='toggle_estado'), # esto de manera generica inactivar o activar un objeto de cualquier modelo
     path('categoria/create/', CreateCategoriaView.as_view(), name='create_categoria'),
@@ -48,4 +50,5 @@ urlpatterns = [
     path('compras/', CompraListView.as_view(), name='compras'),
     path('compras/create/', CreateCompraView.as_view(), name='create_compra'),
     path('compras/edit/<int:pk>/', EditCompraView.as_view(), name='edit_compra'),
+    path('compras/recibir/<int:pk>/', recibir_compra, name='recibir_compra'),
 ]

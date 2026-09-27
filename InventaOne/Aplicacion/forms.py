@@ -62,6 +62,34 @@ class UsuarioForm(forms.ModelForm):
             'apellido_materno': forms.TextInput(attrs={'class': 'form-control'}),
         }
         
+class PerfilForm(forms.ModelForm):
+    """Formulario para que el usuario actualice sus propios datos de perfil.
+    No incluye 'rol' ni 'username': un usuario no puede cambiar su propio rol."""
+    class Meta:
+        model = Usuario
+        fields = [
+            'nombre',
+            'apellido_paterno',
+            'apellido_materno',
+            'email',
+            'rut',
+            'foto',
+        ]
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'apellido_paterno': forms.TextInput(attrs={'class': 'form-control'}),
+            'apellido_materno': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'rut': forms.TextInput(attrs={'class': 'form-control'}),
+            'foto': forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields:
+            self.fields[field].widget.attrs.update({'class': 'form-control'})
+
+
 class CategoriaForm(forms.ModelForm):
     class Meta:
         model = Categoria

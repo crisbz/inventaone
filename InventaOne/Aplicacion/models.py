@@ -3,6 +3,7 @@ from decimal import Decimal
 from django.db import models
 from django.core.management.base import CommandError
 from django.conf import settings
+from django.templatetags.static import static
 from django.utils import timezone
 # Create your models here.
 
@@ -23,6 +24,7 @@ class Usuario(AbstractUser):
     apellido_paterno = models.CharField(max_length=100, null=True, blank=True)
     apellido_materno = models.CharField(max_length=100, null=True, blank=True)
     rol = models.CharField(max_length=50, choices=ROLE_CHOICES, null=True, blank=True)
+    foto = models.ImageField(upload_to='perfiles/', null=True, blank=True)
 
     REQUIRED_FIELDS = ['email', 'rol']  # <-- Agrega esto
 
@@ -35,6 +37,19 @@ class Usuario(AbstractUser):
             self.is_superuser = False
             self.is_staff = False
         super().save(*args, **kwargs)
+
+    @property
+    def foto_url(self):
+        """URL de la foto de perfil; si no tiene, devuelve la imagen por defecto."""
+        if self.foto and hasattr(self.foto, 'url'):
+            return self.foto.url
+        return static('img/perfil_default.svg')
+
+    @property
+    def nombre_completo(self):
+        partes = [self.nombre, self.apellido_paterno, self.apellido_materno]
+        completo = " ".join(p for p in partes if p).strip()
+        return completo or self.username
 
     class Meta:
         db_table = 'Usuario'
@@ -158,6 +173,8 @@ class Compra(ClaseModelo):
     id_compra = models.AutoField(primary_key=True)
     fecha = models.DateField(null=True, blank=True)
     id_proveedor = models.ForeignKey('Proveedor', on_delete=models.CASCADE, null=True, blank=True)
+    recibida = models.BooleanField(default=False)          # True cuando la mercadería ya ingresó a stock
+    fecha_recepcion = models.DateField(null=True, blank=True)
 
     class Meta:
         db_table = 'Compra'

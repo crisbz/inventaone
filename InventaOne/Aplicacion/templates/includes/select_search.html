@@ -1,0 +1,83 @@
+{% comment %}
+  Convierte los <select> de los formularios (modales y páginas) en
+  desplegables CON BUSCADOR usando Tom Select.
+  - No cambia el HTML de los formularios ni el envío: Tom Select mantiene
+    el <select> original oculto y sincroniza su valor.
+  - Se reinicializa solo cuando el modal #popup carga contenido nuevo.
+  - Se excluyen los <select> de la tabla de detalle de compras (#tblDetalles),
+    que se clonan por JS.
+{% endcomment %}
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/tom-select/2.3.1/css/tom-select.bootstrap5.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tom-select/2.3.1/js/tom-select.complete.min.js"></script>
+
+<style>
+  /* Que combine con los inputs redondeados del sitio */
+  .ts-wrapper.form-control { padding: 0 !important; border: none !important; box-shadow: none !important; height: auto; }
+  .ts-wrapper .ts-control {
+    border: 1.5px solid #d7dce3;
+    border-radius: 0.6rem;
+    padding: 0.5rem 0.85rem;
+    min-height: 42px;
+    font-size: 0.9rem;
+  }
+  .ts-wrapper.focus .ts-control {
+    border-color: #1976d2;
+    box-shadow: 0 0 0 0.2rem rgba(25, 118, 210, 0.15);
+  }
+  .ts-dropdown {
+    border: 1px solid #d7dce3;
+    border-radius: 0.6rem;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+    z-index: 2000;               /* por encima del modal de Bootstrap (1055) */
+    font-size: 0.9rem;
+  }
+  .ts-dropdown .option.active { background: #eef0ff; color: #1f2937; }
+  .ts-dropdown .no-results { padding: 6px 12px; color: #9ca3af; }
+</style>
+
+<script>
+  (function () {
+    function initSelects(scope) {
+      if (typeof TomSelect === 'undefined') return;
+      var root = scope || document;
+      var lista = root.querySelectorAll('select:not([multiple])');
+      Array.prototype.forEach.call(lista, function (sel) {
+        if (sel.tomselect) return;                       // ya convertido
+        if (sel.closest && sel.closest('#tblDetalles')) return;  // detalle de compras: no tocar
+        if (sel.closest && sel.closest('.dataTables_wrapper')) return;  // control de DataTables
+        if (sel.hasAttribute('data-no-search')) return;  // opt-out manual
+        try {
+          new TomSelect(sel, {
+            create: false,
+            allowEmptyOption: true,
+            dropdownParent: 'body',
+            maxOptions: null,
+            placeholder: (sel.options[0] && sel.options[0].value === '') ? sel.options[0].text : 'Buscar...',
+            render: {
+              no_results: function () { return '<div class="no-results">Sin resultados</div>'; }
+            }
+          });
+        } catch (e) { /* si un select ya no está en el DOM, se ignora */ }
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      // Formularios que ya están en la página al cargar
+      initSelects(document);
+
+      var popup = document.getElementById('popup');
+      if (!popup) return;
+
+      // 1) Cuando el modal termina de mostrarse
+      popup.addEventListener('shown.bs.modal', function () { initSelects(popup); });
+
+      // 2) Cuando el contenido del modal se reemplaza (abrir otro modal o
+      //    volver a renderizar el formulario con errores de validación)
+      if (window.MutationObserver) {
+        var obs = new MutationObserver(function () { initSelects(popup); });
+        obs.observe(popup, { childList: true, subtree: true });
+      }
+    });
+  })();
+</script>

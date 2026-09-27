@@ -1,0 +1,42 @@
+# ==== Entornos virtuales ====
+env/
+venv/
+.venv/
+ENV/
+
+# ==== Python ====
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+
+# ==== Django ====
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+*.log
+local_settings.py
+
+# ==== Variables de entorno / secretos ====
+.env
+.env.*
+
+# ==== Editores / SO ====
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ==== Copias sueltas fuera del proyecto real (InventaOne/) ====
+# Quedaron de una reorganizacion anterior; el proyecto real vive en
+# InventaOne/manage.py, InventaOne/Aplicacion/ e InventaOne/InventaOne/.
+/db.sqlite3
+/manage.py
+/media/
+/requerimientos.txt
+/InventaOne/__init__.py
+/InventaOne/asgi.py
+/InventaOne/settings.py
+/InventaOne/urls.py
+/InventaOne/wsgi.py

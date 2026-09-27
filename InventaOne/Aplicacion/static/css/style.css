@@ -102,5 +102,318 @@ body {
 }
 
 
+/* ============================================================
+   APARIENCIA DE LOS MODALES DE FORMULARIO (#popup)
+   Solo estilos visuales. NO cambia HTML, IDs, name ni JS.
+   Este modal es compartido por todos los formularios AJAX.
+   ============================================================ */
+
+/* Centrar el modal verticalmente en la pantalla */
+#popup .modal-dialog {
+  display: flex;
+  align-items: center;
+  min-height: calc(100% - 3.5rem);
+}
+
+/* Caja del modal: borde verde que rodea todo el cuadro, esquinas
+   redondeadas y sombra suave */
+#popup .modal-content {
+  border: 2px solid #1cc88a;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(28, 200, 138, 0.18);
+}
+
+/* Franja verde en la parte superior, a juego con el borde */
+#popup .modal-content::before {
+  content: "";
+  display: block;
+  height: 5px;
+  background: #1cc88a;
+}
+
+/* La tarjeta interna deja de competir visualmente con el modal */
+#popup .card,
+#popup .card.border-left-success {
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+#popup .card-body {
+  padding: 1.75rem 2rem 1.5rem;
+  max-height: calc(100vh - 7rem);
+  overflow-y: auto;
+}
+
+/* Título del modal ("Nuevo ...", "Editar ...") */
+#popup .card-body .text-primary.text-uppercase {
+  font-size: 1rem !important;
+  letter-spacing: 0.08em;
+  color: #0d47a1 !important;
+  padding-bottom: 0.75rem;
+  margin-bottom: 0 !important;
+  border-bottom: 2px solid #e8eef7;
+}
+
+/* Divisores más sutiles */
+#popup .dropdown-divider {
+  border-top: 1px solid #eef1f5;
+  margin: 1.1rem 0;
+}
+
+/* Etiquetas de los campos */
+#popup .form-label {
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: #4b5563;
+  margin-bottom: 0.35rem;
+  text-transform: none;
+}
+
+/* Campos de texto, fecha, número y selects */
+#popup .form-control,
+#popup .form-select {
+  border: 1.5px solid #d7dce3;
+  border-radius: 0.6rem;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.9rem;
+  box-shadow: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#popup .form-control:focus,
+#popup .form-select:focus {
+  border-color: #1976d2;
+  box-shadow: 0 0 0 0.2rem rgba(25, 118, 210, 0.15);
+}
+
+#popup textarea.form-control {
+  min-height: 90px;
+}
+
+/* Flecha personalizada para los <select> que usan la clase .form-control */
+#popup select.form-control {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592c.859 0 1.319 1.013.753 1.658l-4.796 5.482a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.8rem center;
+  padding-right: 2.3rem;
+}
+
+/* Mensajes de error bajo cada campo */
+#popup .text-danger.small {
+  font-size: 0.78rem;
+  margin-top: 0.3rem;
+}
+
+/* Icono decorativo lateral: se oculta para un diseño más limpio */
+#popup .row.no-gutters > .col-auto {
+  display: none;
+}
+
+/* Botones (se respeta el tamaño de los .btn-sm de las tablas internas) */
+#popup .btn:not(.btn-sm) {
+  border-radius: 0.6rem;
+  padding: 0.55rem 1.4rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+}
+
+#popup .btn:not(.btn-sm) + .btn:not(.btn-sm) {
+  margin-left: 0.5rem;
+}
+
+/* Botón "Guardar" (mantiene la clase .btn-danger) -> azul de la marca */
+#popup .btn-danger:not(.btn-sm) {
+  border: none;
+  color: #fff;
+  background: linear-gradient(90deg, #0d47a1, #1976d2);
+  box-shadow: 0 6px 14px rgba(25, 118, 210, 0.35);
+}
+
+#popup .btn-danger:not(.btn-sm):hover {
+  background: linear-gradient(90deg, #1565c0, #1e88e5);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(25, 118, 210, 0.4);
+}
+
+/* Botón "Cancelar" (mantiene la clase .btn-success) -> gris neutro */
+#popup .btn-success:not(.btn-sm) {
+  border: 1.5px solid #d7dce3;
+  color: #4b5563;
+  background: #f8f9fb;
+  box-shadow: none;
+}
+
+#popup .btn-success:not(.btn-sm):hover {
+  background: #eceef2;
+  color: #1f2937;
+  transform: translateY(-1px);
+}
+
+/* Tabla de detalle (modal de compras): encabezado más suave */
+#popup #tblDetalles thead th {
+  background: #f4f6fb;
+  border-color: #e5e9f2;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #55607a;
+}
+
+/* Pequeño pulido a los modales de aviso y confirmación */
+#errorModal .modal-content,
+#confirmModal .modal-content {
+  border: none;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
+}
+
+
+/* ============================================================
+   SIDEBAR MODERNO (#sidebarWrapper)
+   Solo estilos visuales. No cambia HTML ni JS.
+   ============================================================ */
+
+#sidebarWrapper,
+#sidebarWrapper.custom-sidebar {
+  background: linear-gradient(180deg, #1f2544 0%, #14172e 100%) !important;
+  box-shadow: 4px 0 24px rgba(15, 18, 40, 0.25);
+  padding-top: 0.5rem;
+}
+
+/* Scrollbar fino dentro del sidebar */
+#sidebarWrapper {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+#sidebarWrapper::-webkit-scrollbar {
+  width: 6px;
+}
+#sidebarWrapper::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 3px;
+}
+
+/* Marca / logo */
+#sidebarWrapper .sidebar-brand {
+  padding: 1.4rem 1rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+#sidebarWrapper .sidebar-brand:hover {
+  text-decoration: none;
+}
+#sidebarWrapper .sidebar-brand-icon i {
+  font-size: 1.6rem;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 0.55rem;
+  border-radius: 0.85rem;
+  color: #fff;
+}
+#sidebarWrapper .sidebar-brand-text {
+  font-size: 1.05rem;
+  color: #fff;
+}
+
+/* Divisores tenues */
+#sidebarWrapper .sidebar-divider {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin: 0.5rem 1rem;
+}
+
+/* Espacio entre items */
+#sidebarWrapper .nav-item {
+  margin: 0.12rem 0.6rem;
+}
+
+/* Enlaces */
+#sidebarWrapper .nav-item .nav-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.68rem 0.9rem;
+  border-radius: 0.7rem;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+#sidebarWrapper .nav-item .nav-link i {
+  width: 1.5rem;
+  text-align: center;
+  font-size: 0.95rem;
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
+}
+
+/* Hover */
+#sidebarWrapper .nav-item .nav-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  transform: translateX(3px);
+}
+#sidebarWrapper .nav-item .nav-link:hover i {
+  opacity: 1;
+}
+
+/* Activo (funciona si el enlace lleva la clase .active) */
+#sidebarWrapper .nav-item .nav-link.active {
+  background: linear-gradient(90deg, #1976d2, #42a5f5);
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(25, 118, 210, 0.35);
+}
+#sidebarWrapper .nav-item .nav-link.active i {
+  opacity: 1;
+}
+#sidebarWrapper .nav-item .nav-link.active::before {
+  content: "";
+  position: absolute;
+  left: -0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 60%;
+  border-radius: 4px;
+  background: #fff;
+}
+
+/* Submenús (por si se reactivan en la plantilla) */
+#sidebarWrapper .sidebar-submenu {
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 0.6rem;
+  margin: 0.15rem 0 0.3rem;
+  padding: 0.2rem 0;
+}
+#sidebarWrapper .sidebar-submenu .nav-link {
+  padding-left: 2.4rem;
+  font-size: 0.85rem;
+}
+#sidebarWrapper .submenu-arrow {
+  transition: transform 0.2s ease;
+}
+#sidebarWrapper .nav-link:not(.collapsed) .submenu-arrow {
+  transform: rotate(180deg);
+}
+
+/* Botón hamburguesa del navbar superior */
+#sidebarToggleTop {
+  border-radius: 0.6rem;
+  padding: 0.25rem 0.55rem;
+  transition: background 0.2s ease;
+}
+#sidebarToggleTop:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+
 
 

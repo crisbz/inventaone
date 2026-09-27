@@ -1,0 +1,541 @@
+{% load static %}
+{% comment %}
+  Widget de ChatBot IA - Asistente de Inventario
+  Visible en todas las vistas y para todos los usuarios autenticados.
+  Menu guiado por botones; el backend (Aplicacion:chatbot_api) consulta la BD.
+  Estilos y clases con prefijo .cb- para no afectar al resto del sitio.
+{% endcomment %}
+<div id="cb-widget" data-chat-url="{% url 'Aplicacion:chatbot_api' %}">
+  {% csrf_token %}
+
+  <!-- Boton flotante -->
+  <button id="cbToggle" type="button" aria-label="Abrir asistente virtual" title="Asistente virtual">
+    <i class="fas fa-robot" aria-hidden="true"></i>
+  </button>
+
+  <!-- Panel de chat -->
+  <div id="cbPanel" role="dialog" aria-label="Asistente virtual" aria-hidden="true">
+    <div class="cb-header">
+      <div class="cb-header-info">
+        <h2><i class="fas fa-robot" aria-hidden="true"></i> ChatBot IA</h2>
+        <span class="cb-subtitle">Tu asistente virtual inteligente</span>
+      </div>
+      <div class="cb-status"><span class="cb-status-dot"></span> En línea</div>
+      <button type="button" id="cbClose" class="cb-close" aria-label="Cerrar">
+        <i class="fas fa-times" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <div class="cb-messages" id="cbMessages">
+      <div class="cb-welcome" id="cbWelcome">
+        <i class="fas fa-comments" aria-hidden="true"></i>
+        <h3>¡Bienvenido!</h3>
+        <p>Hola, soy tu asistente virtual. Escríbeme para empezar a conversar.</p>
+      </div>
+    </div>
+
+    <div class="cb-typing" id="cbTyping" hidden>
+      <div class="cb-avatar cb-avatar-bot"><i class="fas fa-robot" aria-hidden="true"></i></div>
+      <div class="cb-typing-dots"><span></span><span></span><span></span></div>
+    </div>
+
+    <div class="cb-input">
+      <input type="text" id="cbInput" placeholder="Escribe tu mensaje aquí..." maxlength="500" autocomplete="off">
+      <button type="button" id="cbSend" aria-label="Enviar mensaje" disabled>
+        <i class="fas fa-paper-plane" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* ---------- Boton flotante ---------- */
+  #cb-widget #cbToggle {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    width: 60px;
+    height: 60px;
+    border: none;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    font-size: 1.5rem;
+    cursor: pointer;
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1035;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  #cb-widget #cbToggle:hover {
+    transform: scale(1.08) rotate(6deg);
+    box-shadow: 0 14px 30px rgba(102, 126, 234, 0.55);
+  }
+  #cb-widget.cb-open #cbToggle {
+    transform: scale(0.9);
+    opacity: 0.85;
+  }
+
+  /* ---------- Panel ---------- */
+  #cb-widget #cbPanel {
+    position: fixed;
+    right: 24px;
+    bottom: 96px;
+    width: 380px;
+    max-width: calc(100vw - 32px);
+    height: 560px;
+    max-height: calc(100vh - 130px);
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 1036;
+    opacity: 0;
+    transform: translateY(20px) scale(0.96);
+    pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+  }
+  #cb-widget.cb-open #cbPanel {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+
+  /* ---------- Header ---------- */
+  #cb-widget .cb-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  #cb-widget .cb-header-info { flex: 1; }
+  #cb-widget .cb-header h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+  }
+  #cb-widget .cb-subtitle {
+    font-size: 0.78rem;
+    opacity: 0.9;
+  }
+  #cb-widget .cb-status {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.72rem;
+    white-space: nowrap;
+  }
+  #cb-widget .cb-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4ade80;
+    animation: cbPulse 2s infinite;
+  }
+  @keyframes cbPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  #cb-widget .cb-close {
+    background: rgba(255, 255, 255, 0.18);
+    border: none;
+    color: #fff;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+  }
+  #cb-widget .cb-close:hover { background: rgba(255, 255, 255, 0.32); }
+
+  /* ---------- Mensajes ---------- */
+  #cb-widget .cb-messages {
+    flex: 1;
+    padding: 18px;
+    overflow-y: auto;
+    background: #f8fafc;
+  }
+  #cb-widget .cb-messages::-webkit-scrollbar { width: 6px; }
+  #cb-widget .cb-messages::-webkit-scrollbar-thumb {
+    background: #c8ccd6;
+    border-radius: 3px;
+  }
+  #cb-widget .cb-welcome {
+    text-align: center;
+    color: #6b7280;
+    padding: 30px 16px;
+  }
+  #cb-widget .cb-welcome i { font-size: 2.6rem; color: #667eea; margin-bottom: 14px; }
+  #cb-widget .cb-welcome h3 { font-size: 1.2rem; color: #1f2937; margin: 0 0 8px; }
+  #cb-widget .cb-welcome p { font-size: 0.9rem; line-height: 1.5; margin: 0; }
+
+  #cb-widget .cb-msg {
+    margin-bottom: 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    animation: cbSlideIn 0.28s ease-out;
+  }
+  @keyframes cbSlideIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  #cb-widget .cb-msg.cb-user { flex-direction: row-reverse; }
+  #cb-widget .cb-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  #cb-widget .cb-avatar-bot { background: linear-gradient(135deg, #4ade80 0%, #06b6d4 100%); }
+  #cb-widget .cb-avatar-user { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+  #cb-widget .cb-bubble {
+    max-width: 78%;
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: 0.9rem;
+    line-height: 1.45;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+  }
+
+  /* ---------- Botones de opciones ---------- */
+  #cb-widget .cb-options {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 7px;
+    margin: 2px 0 14px 43px;
+  }
+  #cb-widget .cb-opt {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1.5px solid #c7d0ee;
+    background: #fff;
+    color: #4b3f8f;
+    padding: 8px 14px;
+    border-radius: 18px;
+    font-size: 0.84rem;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  }
+  #cb-widget .cb-opt i {
+    width: 15px;
+    text-align: center;
+    color: #667eea;
+    font-size: 0.85rem;
+  }
+  #cb-widget .cb-opt:hover {
+    background: #eef0ff;
+    border-color: #667eea;
+    transform: translateY(-1px);
+  }
+  /* Icono al inicio de la burbuja del bot */
+  #cb-widget .cb-bubble .cb-bicon {
+    color: #667eea;
+    margin-right: 6px;
+  }
+  #cb-widget .cb-msg.cb-user .cb-bubble {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+  #cb-widget .cb-msg.cb-bot .cb-bubble {
+    background: #fff;
+    color: #1f2937;
+    border: 1px solid #e5e7eb;
+    border-bottom-left-radius: 4px;
+  }
+  #cb-widget .cb-time {
+    display: block;
+    font-size: 0.68rem;
+    opacity: 0.7;
+    margin-top: 4px;
+  }
+
+  /* ---------- Indicador de escritura ---------- */
+  #cb-widget .cb-typing {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 0 18px 12px;
+  }
+  #cb-widget .cb-typing[hidden] { display: none; }
+  #cb-widget .cb-typing-dots {
+    display: flex;
+    gap: 4px;
+    background: #fff;
+    padding: 10px 14px;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+  }
+  #cb-widget .cb-typing-dots span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #9ca3af;
+    animation: cbTyping 1.4s infinite;
+  }
+  #cb-widget .cb-typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+  #cb-widget .cb-typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes cbTyping {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-8px); }
+  }
+
+  /* ---------- Input ---------- */
+  #cb-widget .cb-input {
+    padding: 14px;
+    background: #fff;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    gap: 9px;
+    align-items: center;
+  }
+  #cb-widget #cbInput {
+    flex: 1;
+    padding: 10px 14px;
+    border: 2px solid #e5e7eb;
+    border-radius: 22px;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.25s ease;
+  }
+  #cb-widget #cbInput:focus { border-color: #667eea; }
+  #cb-widget #cbSend {
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+  #cb-widget #cbSend:hover:not(:disabled) { transform: scale(1.08); }
+  #cb-widget #cbSend:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  @media (max-width: 480px) {
+    #cb-widget #cbPanel {
+      right: 12px;
+      left: 12px;
+      bottom: 88px;
+      width: auto;
+      max-width: none;
+      height: calc(100vh - 120px);
+    }
+    #cb-widget #cbToggle { right: 16px; bottom: 16px; }
+  }
+</style>
+
+<script>
+  (function () {
+    if (window.__cbInit) return;
+    window.__cbInit = true;
+
+    document.addEventListener('DOMContentLoaded', function () {
+      var widget = document.getElementById('cb-widget');
+      if (!widget) return;
+
+      var toggle = document.getElementById('cbToggle');
+      var closeBtn = document.getElementById('cbClose');
+      var panel = document.getElementById('cbPanel');
+      var messages = document.getElementById('cbMessages');
+      var welcome = document.getElementById('cbWelcome');
+      var typing = document.getElementById('cbTyping');
+      var input = document.getElementById('cbInput');
+      var sendBtn = document.getElementById('cbSend');
+
+      var chatUrl = widget.getAttribute('data-chat-url');
+      var csrfEl = widget.querySelector('input[name="csrfmiddlewaretoken"]');
+      var csrfToken = csrfEl ? csrfEl.value : '';
+      var greeted = false;
+
+      function nowTime() {
+        return new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+      }
+
+      function scrollDown() {
+        setTimeout(function () { messages.scrollTop = messages.scrollHeight; }, 50);
+      }
+
+      // Solo se aceptan clases de icono tipo "fa-xxx"; cualquier otra cosa se ignora.
+      function safeIcon(name) {
+        return (typeof name === 'string' && /^fa-[a-z0-9-]+$/.test(name)) ? name : '';
+      }
+
+      function addMessage(text, sender, time, icon) {
+        if (welcome && welcome.parentNode) welcome.remove();
+
+        var row = document.createElement('div');
+        row.className = 'cb-msg ' + (sender === 'user' ? 'cb-user' : 'cb-bot');
+
+        var avatar = document.createElement('div');
+        avatar.className = 'cb-avatar ' + (sender === 'user' ? 'cb-avatar-user' : 'cb-avatar-bot');
+        var av = document.createElement('i');
+        av.className = 'fas ' + (sender === 'user' ? 'fa-user' : 'fa-robot');
+        avatar.appendChild(av);
+
+        var bubble = document.createElement('div');
+        bubble.className = 'cb-bubble';
+
+        var ic = safeIcon(icon);
+        if (ic && sender === 'bot') {
+          var bi = document.createElement('i');
+          bi.className = 'fas ' + ic + ' cb-bicon';
+          bubble.appendChild(bi);
+        }
+        bubble.appendChild(document.createTextNode(text));   // texto plano, sin HTML
+
+        var stamp = document.createElement('span');
+        stamp.className = 'cb-time';
+        stamp.textContent = time || nowTime();
+        bubble.appendChild(stamp);
+
+        row.appendChild(avatar);
+        row.appendChild(bubble);
+        messages.appendChild(row);
+        scrollDown();
+      }
+
+      function showTyping() { typing.hidden = false; scrollDown(); }
+      function hideTyping() { typing.hidden = true; }
+
+      var state = { inputAction: null };
+
+      function clearOptions() {
+        var groups = messages.querySelectorAll('.cb-options');
+        for (var i = 0; i < groups.length; i++) groups[i].remove();
+      }
+
+      function renderOptions(options) {
+        clearOptions();
+        if (!options || !options.length) return;
+        var wrap = document.createElement('div');
+        wrap.className = 'cb-options';
+        options.forEach(function (opt) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'cb-opt';
+          var ic = safeIcon(opt.icon);
+          if (ic) {
+            var oi = document.createElement('i');
+            oi.className = 'fas ' + ic;
+            b.appendChild(oi);
+          }
+          b.appendChild(document.createTextNode(opt.label));
+          b.addEventListener('click', function () {
+            addMessage(opt.label, 'user');
+            clearOptions();
+            state.inputAction = null;
+            send({ action: opt.action });
+          });
+          wrap.appendChild(b);
+        });
+        messages.appendChild(wrap);
+        scrollDown();
+      }
+
+      function renderBot(data) {
+        if (data.text) addMessage(data.text, 'bot', data.timestamp, data.icon);
+        renderOptions(data.options);
+        if (data.expects_input) {
+          state.inputAction = data.input_action || null;
+          input.placeholder = data.input_placeholder || 'Escribe tu respuesta...';
+          input.focus();
+        } else {
+          state.inputAction = null;
+          input.placeholder = 'Escribe tu mensaje aquí...';
+        }
+      }
+
+      function send(payload) {
+        showTyping();
+        fetch(chatUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+          credentials: 'same-origin',
+          body: JSON.stringify(payload)
+        })
+          .then(function (r) { return r.ok ? r.json() : Promise.reject(r); })
+          .then(function (data) { hideTyping(); renderBot(data); })
+          .catch(function () {
+            hideTyping();
+            addMessage('No pude conectar con el servidor. Intenta de nuevo.', 'bot', null, 'fa-exclamation-triangle');
+          });
+      }
+
+      function openPanel() {
+        widget.classList.add('cb-open');
+        panel.setAttribute('aria-hidden', 'false');
+        input.focus();
+        if (!greeted) {
+          greeted = true;
+          send({ action: 'menu' });
+        }
+      }
+
+      function closePanel() {
+        widget.classList.remove('cb-open');
+        panel.setAttribute('aria-hidden', 'true');
+      }
+
+      toggle.addEventListener('click', function () {
+        widget.classList.contains('cb-open') ? closePanel() : openPanel();
+      });
+      closeBtn.addEventListener('click', closePanel);
+
+      input.addEventListener('input', function () {
+        sendBtn.disabled = this.value.trim() === '';
+      });
+      input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+      sendBtn.addEventListener('click', sendMessage);
+
+      function sendMessage() {
+        var text = input.value.trim();
+        if (!text) return;
+
+        addMessage(text, 'user');
+        input.value = '';
+        sendBtn.disabled = true;
+        clearOptions();
+
+        if (state.inputAction) {
+          var act = state.inputAction;
+          state.inputAction = null;
+          send({ action: act, query: text });
+        } else {
+          send({ action: 'freetext', query: text });
+        }
+      }
+    });
+  })();
+</script>
